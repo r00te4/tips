@@ -1,4 +1,0 @@
-tips
-====
-
-python tips 
