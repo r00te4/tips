@@ -1,0 +1,140 @@
+#! /usr/bin/python
+Twisted是针对Python的一个事件驱动的网络框架，最初是为了网络游戏而开发的，但是现在被应用于各类网络软件。
+Twisted是非常强大的框架并提供了大量的支持，如：Web服务器和客户端、SSH2, SMTP, POP3, IMAP4, AIM, ICQ, IRC, MSN,Jabber, NNTP, DNS等等。
+Twisted使用了更多的基于事件的方式。要写一个基本的服务器，你要实现事件处理器，它处理诸如一个新的客户端连接、新的数据到达和客户端连接中断等情况。
+
+默认的twisted使用的是select()，并发性能不要太指望。甚至并发数稍微高一点的时候就会报什么file descriptor out of range of select()的错误。总之默认的twisted能承受的并发数很有限。
+
+twisted是有epoll支持的，你可以在启动twistd时选择epollreactor。不过貌似并不稳定。使用epoll()方式以后，印象大约是每几千个请求就会报出一个文件描述符的什么错误。另外，就是在关闭程序时有个语法错误，这个绝对是twisted的bug。从2.5.0升级到8.1.0之后，关闭服务器那个报出的bug依然存在。而twisted-8.1.0在启动时还要很傻的在安装位置写一个什么缓存文件。普通用户根本没有权限，所以每次启动服务器时都会报错，但是服务器可以照常启动。
+
+twisted是一个事件驱动模型，它通过reactor进行事件的分发。根据文档介绍twisted支持IOCPReactor, selectReactor, pollReactor, epoolReactor, kqueueReactor， 其中系统默认使用selectReactor。为了提高程序的响应能力，我们应根据不同的需要选择不同reactor， 那么我们如何更换所选择的reactor呢？
+
+在程序开头，首先导入安装 epollreactor
+from twisted.internet import epollreactor
+epollreactor.install()
+
+
+Twisted是一个被设计的非常灵活框架以至于能够让你写出非常强大的服务器, 这种灵活的代价是需要好通过好几个层次来实现你的服务器
+---------------------------------------
+协议: protocol
+from twisted.internet.protocol import Protocol
+建立服务器的第一个要解决的问题就是服务与外界的交流协议
+在协议中你可以定义连接、数据接收、断开连接等一系列的事件如果进行响应。
+但是对于所有连接上来的协议的建立、持久配置数据的存储这样的内容并不会保存在协议中。  
+
+工厂: factory
+from twisted.internet.protocol import Factory
+持久配置数据的存储通常都会保存在工厂里    
+twisted提供了缺省的工厂实现最为普通的需求。它会实例化每个协议，并且通过设置每个协议中factory属性来使协议可以使用到它自己，做这个设置的作用就是让协议在进行处理连接数据时可以使用到工厂中存储的持久配置数据。
+工厂的启动是需要reactor真实的建立侦听并启动才可以实现的。 
+
+反应器: reactor
+from twisted.internet import reactor
+工厂的启动是需要reactor真实的建立侦听并启动才可以实现的
+可以把反应器(reactor)想象为Twisted程序的中枢神经。除了分发事件循环之外，反应器还做很多重要的工作：定时任务、线程、建立网络连接、监听连接。为了让反应器可以正常工作，需要启动事件循环。
+
+
+------------------------------------------
+
+一、Twisted基本模型
+Twisted 网络编程框架是一种基于事件的网络编程框架，用户需要继承特定的类，并重载其中的方法来处理网络通信中可能出现的各种情况。
+Twisted的网络通信模型最基本的也要由三部分组成：反应器(reactor)、协议(protocol)、工厂(factory)。
+    反应器用来执行事件循环，分发事件处理等等，每个应用程序中一般只能启动一个reactor。
+    协议用来完成与一个已经连接成功的主机的交互功能，主要有数据的接收和发送功能。连接的断开事件也可以在这里处理。
+    工厂负责与一个协议的启动和关闭功能，而且还负责在连接成功时生成一个协议对象，(by gashero)用于与远程主机的交互功能。
+
+一个典型的Twisted应用程序会建立至少一个协议，可以从twisted.internet.protocol.BaseProtocol类或其子类继承。协议还需要实现数据的接收处理，即收到数据之后需要做出何种响应。比较简单的Twisted应用程序可以继承一个空的工厂，来自 twisted.internet.protocol.Factory或其子类。工厂至少应该指定protocol属性，指向协议类。最后就是要启动事件循环，根据连接方向的不同，可以选择用reactor的connectXXX()或listenXXX()方法，然后执行reactor.run()启动事件循环。
+
+二、协议模型
+1. 所有协议类的基类是twisted.internet.protocol.BaseProtocol
+    def connectionMade(self):   # 当一个连接成功时,会被调用
+
+2. 实际的应用程序一般也不是直接继承BaseProtocol来实现协议，而是继承Protocol类
+    def dataReceived(self,data): #接收到数据事件，可重载
+    def connectionLost(self,reason=connectionDone): #连接断开事件，可重载，依靠reason区分断开类型
+
+3. 如果需要自己实现一种协议，比较推荐的是twisted.protocols.basic.LineReceiver类
+    def clearLineBuffer(self):      #清空缓冲区
+    def dataReceived(self,data):    #继承父类的方法，用于分发事件，可重载
+    def setLineMode(self,extra=""): #设置工作状态为行模式
+    def setRawMode(self):           #设置工作状态为原始数据模式
+    def rawDataReceived(self,data): #原始数据接收事件，可重载
+    def lineReceived(self,line):    #行数据接收事件，可重载
+    def sendLine(self,line):        #以行模式发送数据
+    def lineLengthExceeded(self,line): #当接收到的一行长度超过了最大值时的错误响应，并断开连接"")
+
+4. 如果要发送原始数据，可以使用如下方法：
+    self.transport.write(data)
+
+5. 至于self.transport对象，这个是所有的协议对象都有的成员，可以看出是从BaseProtocol就已经存在的。
+    self.transport.loseConnection() #关闭连接
+    self.transport.getPeer()        #获取对方信息
+    self.transport.getHost()        #获取本机信息"")""""
+
+6. 两种通用继承模式: 
+from twisted.internet import protocol
+class Data_Center(protocol.Protocol)
+    def connectionMade(self)
+    def dataReceived(self,data)
+    def connectionLost(self,reason=connectionDone)
+
+from twisted.protocols import basic
+class Data_Center(basic.LineReceiver)
+    def connectionMade(self)
+    def dataReceived(self,data)
+    def connectionLost(self,reason=connectionDone)
+    def lineReceived(self,line)
+    def rawDataReceived(self,data)
+    ....
+
+所有协议类的基类是twisted.internet.protocol.BaseProtocol，但是一般使用其子类。不同的协议子类提供了不同的数据接收方法，如LineReceiver子类就允许同时使用行和原始数据两种方法接收数据。实际的应用程序一般也不是直接继承BaseProtocol来实现协议，而是继承Protocol类。从Protocol类继承就可以完成协议的基本处理了，包括连接的建立和断开事件，还有数据接收事件。
+
+如果需要自己实现一种协议，比较推荐的是twisted.protocols.basic.LineReceiver类。LineReceiver默认按照文本行模型进行通信，接收数据也是以行为单位。但是也可以设置使用原始数据模式进行通信。比较典型的应用就是HTTPChannel协议类。不少协议是混合型的—— 基于行的部分和原始数据部分。如:HTTP/1.1, 针对这些情况，出现了一个LineReceiver协议。该协议使用两个不同的事件处理——lineReceived和rawDataReceived。默认的，只有lineReceived会对每一行各调用一次。然而，如何setRawMode被调用的话，协议将会调用rawDataReceived，直到setLineMode被调用，它才返回使用lineReceived。HTTP协议在请求报文头部和响应报文头部的传送时使用的是行模式，而在实体主体的传输时又是使用的原始数据模型。所以使用LineReceiver是非常合适的。 可以看到LineReceiver类提供的功能已经相当的完善了，可以手动设置工作状态并提供了完善的事件响应方法。
+
+
+
+三、工厂模型
+对于协议，工厂可以发挥的空间就很小了。所有工厂的基类是twisted.internet.protocol.Factory
+工厂类中最重要的部分就是protocol属性，将这个属性设置为一个协议类(注意不是协议对象)，就可以将这个工厂设置为对应协议的工厂了。
+
+工厂分为客户端工厂和服务器工厂:
+1. 服务器工厂继承自protocol.ServerFactory：
+class My_Server_Factory(protocol.ServerFactory):
+    protocol = Data_Center          # 指向一个协议类 Data_Center, 数据收发
+    def startFactory(self):         #开启工厂
+    def stopFactory(self):          #关闭工厂
+    def buildProtocol(self,addr):   #构造协议对象，并给协议对象添加一个factory属性指向工厂，可以重载, 不太会用这个, 建议不用
+
+2. 客户端工厂继承自protocol.ClientFactory:
+class My_Client_Factory(protocol.ClientFactory):
+    protocol = Data_Center                              # 指向一个协议类 Data_Center, 数据收发
+    def startedConnecting(self,transport):              #连接建立成功时
+    def clientConnectionFailed(self,transport,reason):  #客户端连接失败时, reactor.stop()
+    def clientConnectionLost(self,transport,reason):    #连接断开时, reactor.stop
+
+
+四、连接, 监听
+1. 连接指客户端用来连接的包装, 用来连接远程主机：
+    reactor.connectSSL(self, host, port, factory, contextFactory, timeout=30, bindAddress=None)
+    reactor.connectTCP(self, host, port, factory, timeout=30, bindAddress=None)
+    reactor.connectUDP(self, remotehost, remoteport, protocol, localport=0, interface=' ' , maxPacketSize=8192)''
+    reactor.connectUNIX(self, address, factory, timeout=30, checkPID=0)
+    ...
+
+2. 监听指服务端用来监听客户端的包装, 与客户端相对应的接口有:
+    reactor.listenSSL(self, port, factory, contextFactory, backlog=50, interface=' ' )''
+    reactor.listenTCP(self, port, factory, backlog=50, interface=' ' )''
+    reactor.listenUDP(self, port, protocol, interface=' ' , maxPacketSize=8192)''
+    reactor.listenUNIX(self, address, factory, backlog=50, mode=<object object>, wantPID=0)
+
+
+----------------------------------
+
+
+twisted的里面的又一大核心基础--deferred
+deferred 的作用类似于“多线程”，负责保障多头连接、多项任务的异步执行。当然，deferred “异步”功能的实现，与多线程完全不同，具有以下特点：
+１. deferred 产生的 event，是函数调用返回的对象；
+２. deferred 代表一个连接任务，负责报告任务执行的延迟情况和最终结果；
+３. 对deferred 的操作，通过预定的“事件响应器”（event handler）进行。
+
+用twisted编写网络服务器的时候，一般都是基于单线程事件处理， 那么一旦某一个连接需要大量的时间，就会影响后续的连接，从而影响了系统在单位时间的吞吐量。这些需要花费大量时间的操作一般是指磁盘IO和数据库操作。如果让他们阻塞起，会白白浪费很多cpu时间，那么我们想要的就是它能够在调用后立即返回，我们去处理其他的事情。待到IO和数据库操作完成后有一个东西来通知我们，我们再去接着处理它。这样就能大大得提高了cpu的利用率，从而在资源一定的情况下提高了服务器的性能。而我们需要的这个它，就是 twisted为我提供的deferred

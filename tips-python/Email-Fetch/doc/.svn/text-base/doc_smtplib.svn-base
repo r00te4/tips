@@ -1,0 +1,164 @@
+
+smtplib模块是python中smtp(简单邮件传输协议)的客户端实现。我们可以使用smtplib模块，轻松的发送电子邮件。下面的例子用了不到十行代码来发送电子邮件：
+#coding=gbk  
+
+import smtplib   
+      
+smtp = smtplib.SMTP()   
+smtp.connect("smtp.yeah.net", "25")   
+smtp.login('用户名', '密码')   
+smtp.sendmail('from@yeah.net', 'to@21cn.com', 'From: from@yeah.net/r/nTo: to@21cn.com/r/nSubject: this is a email from python demo/r/n/r/nJust for test~_~')
+smtp.quit() 
+
+1. smtplib.SMTP([host[, port[, local_hostname[, timeout]]]])
+    表示与SMTP服务器之间的连接，通过这个连接我们可以向smtp服务器发送指令，执行相关操作（如：登陆、发送邮件);
+    它的所有参数都是可选的，其中host参数表示smtp服务器主机名，上面例子中的smtp主机为"smtp.yeah.net"；port表示 smtp服务的端口，默认是25；
+
+2. SMTP.set_debuglevel(level)
+　　设置是否为调试模式。默认为False，即非调试模式，表示不输出任何调试信息。
+
+3. SMTP.connect([host[, port]])
+　　连接到指定的smtp服务器。参数分别表示smpt主机和端口。注意: 也可以在host参数中指定端口号（如：smpt.yeah.net:25），这样就没必要给出port参数。
+
+4. SMTP.docmd(cmd[, argstring])
+　　向smtp服务器发送指令。可选参数argstring表示指令的参数。相当于telnet方式来发送邮件, 下面通过调用docmd方法向服务器发送指令来实现邮件的发送：
+import smtplib, base64, time  
+userName = base64.encodestring('username').strip()  
+password = base64.encodestring('password').strip()  
+smtp = smtplib.SMTP()  
+smtp.connect("smtp.yeah.net:25")  
+print smtp.docmd('helo', 'from')  
+print smtp.docmd('auth login')  
+print smtp.docmd(userName)  
+print smtp.docmd(password)  
+print smtp.docmd('mail from:', '<from@yeah.net>')  
+print smtp.docmd('rcpt to:', '<from@yeah.net>')  
+#data 指令表示邮件内容  
+print smtp.docmd(' data' )  
+print smtp.docmd('' '''from: from@yeah.net 
+to: from@yeah.net 
+subject: subject 
+email body 
+. 
+''')
+smtp.quit() 
+
+5. SMTP.helo([hostname])
+　　使用"helo"指令向服务器确认身份。相当于告诉smtp服务器“我是谁”。
+
+6. SMTP.has_extn(name)
+　　判断指定名称在服务器邮件列表中是否存在。出于安全考虑，smtp服务器往往屏蔽了该指令。
+
+7. SMTP.verify(address)
+　　判断指定邮件地址是否在服务器中存在。出于安全考虑，smtp服务器往往屏蔽了该指令。
+
+8. SMTP.login(user, password)
+　　登陆到smtp服务器。现在几乎所有的smtp服务器，都必须在验证用户信息合法之后才允许发送邮件。
+
+9. SMTP.sendmail(from_addr, to_addrs, msg[, mail_options, rcpt_options])
+　　发送邮件;
+    这里要注意一下第三个参数，msg是字符串，表示邮件
+    我们知道邮件一般由标题，发信人，收件人，邮件内容，附件等构成，发送邮件的时候，要注意msg的格式。这个格式就是smtp协议中定义的格式。
+    如最上面的msg字符串的值是:
+    'From: from@yeah.net/r/nTo: to@21cn.com/r/nSubject: this is a email from python demo/r/n/r/nJust for test~_~'
+　　这个字符串的的意思表示:
+        邮件发件人为"from@yeah.net"，
+        收件人为" to@21cn.com"，
+        邮件标题为"this is a email from python demo"，
+        邮件内容为"just for test"。
+
+    细心的你可能会疑问：如果要发送的邮件内容很复杂，包含图片、视频、附件等内容，按照MIME的格式来拼接字符串，将是一件非常麻烦的事。
+    不用担心，python已经考虑到了这点，它为我们提供了email模块，使用该模块可以轻松的发送带图片、视频、附件等复杂内容的邮件
+
+10. SMTP.quit()
+　　断开与smtp服务器的连接，相当于发送"quit"指令
+
+
+---------------------------
+
+email及其相关子模块
+email模块用来处理邮件消息，包括MIME和其他基于RFC 2822 的消息文档。使用这些模块来定义邮件的内容，是非常简单的。下面是一些常用的类：
+class email.mime.multipart. MIMEMultipart:  多个MIME对象的集合
+class email.mime.audio. MIMEAudio:          MIME音频对象
+class email.mime.image. MIMEImage:          MIME二进制文件对象
+class email.mime.text. MIMEText:            MIME文本对象
+
+下面是一个简单的例子来演示如何使用这些类来发送带附件的邮件：
+
+#coding=utf8 
+import smtplib, mimetypes  
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
+from email.MIMEBase import MIMEBase
+   
+#构造邮件内容根容器
+msg = MIMEMultipart()  
+msg['From'] = "from@yeah.net"  
+msg['To' ] = 'to@21cn.com'   
+msg['Subject'] = 'email for tesing'   
+  
+#添加文本邮件内容  
+txt = MIMEText("这是邮件文本内容", 'plain', 'utf-8')
+msg.attach(txt)  
+
+#添加html邮件内容  
+html = MIMEText("这是邮件html内容", 'html', 'utf-8')
+msg.attach(html)  
+
+#添加二进制附件,构造MIMEBase对象做为文件附件内容并附加到根容器
+filename = r'PyQt4.rar'
+ctype, encoding = mimetypes.guess_type(filename)  
+if ctype is None or encoding is not None:  
+    ctype = 'application/octet-stream'   
+maintype, subtype = ctype.split('/' , 1)
+
+data = open(filename, 'rb' )
+file_msg = MIMEBase(maintype, subtype)
+file_msg.set_payload(data.read( ))
+data.close( )
+email.Encoders.encode_base64(file_msg)
+ 
+#设置附件头
+basename = os.path.basename(filename)
+file_msg.add_header('Content-Disposition', 'attachment', filename = basename)
+msg.attach(file_msg)
+ 
+   
+#发送邮件  
+smtp = smtplib.SMTP()  
+smtp.connect('smtp.yeah.net:25')  
+smtp.login('from', '密码')  
+smtp.sendmail('from@yeah.net', 'to@21cn.com', msg.as_string())  
+smtp.quit()  
+print '邮件发送成功'   
+
+-----------------------------
+
+
+from email.MIMEMultipart import MIMEMultipart
+from email.MIMEText import MIMEText
+from email.MIMEBase import MIMEBase
+
+如果只发文本,用MIMEText就可以
+否则需要MIMEMultipart, MIMEMultipart相当于一个容器, 将各个子信息快依次attach进入容器. 
+MIMEBase用来处理二进制附件. MIMEText处理正文. 
+
+发送一个未知MIME类型的文件附件其基本思路如下：
+1. 构造MIMEMultipart对象做为根容器
+2. 构造MIMEText对象做为邮件显示内容并附加到根容器
+3. 构造MIMEBase对象做为文件附件内容并附加到根容器
+　　a. 读入文件内容并格式化
+　　b. 设置附件头
+4. 设置根容器属性
+5. 得到格式化后的完整文本
+6. 用smtp发送邮件 
+
+
+Content-Type,说明内容类型:
+text/plain，纯文本文件
+text/html, html文件
+添加附件就是Application/octet-stream
+
+Content-Transfer-Encoding是编码类型，现在的email都是base64编码
+
+mail有一个组装字符串的as_string()方法, 如上, 调用msg.as_string()将From, To, Subject, Data, attachment等信息组装成一个字符串作为sendmail的一个参数

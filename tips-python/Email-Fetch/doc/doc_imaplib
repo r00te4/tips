@@ -1,0 +1,318 @@
+
+关于IMAP协议方面的东西，对IMAP协议的命令不熟，特别是FETCH命令的用法，不但网上很难找到，就是专业文章也很难找到，这是我从网上搜索到的，
+原文地址：http://www.cnblogs.com/qiubole/archive/2007/11/23/970180.html
+1．
+CREATE <folder>
+CREATE可以创建指定名字的新邮箱。邮箱名称通常是带路径的文件夹全名。（有些IMAP客户机使用邮件夹称呼新邮箱）
+C: A003 CREATE owatagusiam/                 /*创建一个新目录owatagusiam*/
+S: A003 OK CREATE completed
+C: A004 CREATE owatagusiam/blurdybloop  
+/* 在创建的目录owatagusiam下创建一个名为blurdybloop 的邮箱，当然可以省略第一步，直接A004 CREATE owatagusiam/blurdybloop ，表示在新的目录owatagusiam 下创建了一个名为blurdybloop 的邮箱*/        
+S: A004 OK CREATE completed
+
+2．
+DELETE <folder>
+DELETE命令删除指定名字的文件夹。文件夹名字通常是带路径的文件夹全名，当邮箱被删除后，其中的邮件也不复存在。
+C: A683 DELETE blurdybloop
+S: A683 OK DELETE completed
+C: A684 DELETE foo
+S: A684 NO Name "foo" has inferior hierarchical names
+C: A685 DELETE foo/bar
+S: A685 OK DELETE Completed
+
+3．
+RENAME <old folder><new folder>
+RENAME命令可以修改文件夹的名称，它使用两个参数：当前邮箱名和新邮箱名，两个参数的命名符合标准路径命名规则。
+C: A683 RENAME blurdybloop sarasoop
+S: A683 OK RENAME completed
+C: A684 RENAME stuff/junk newbox         /*把stuff目录（文件夹）下的邮箱junk改名为newbox*/
+S: A684 OK RENAME Completed
+
+4．
+LIST <BASE><template>
+LIST命令用于列出邮箱中已有的文件夹，有点像操作系统的列目录命令，有两个参数，邮箱路径参数BASE：表示用户登陆目录；第二个参数template：表示希望显示的邮箱名。这个命令可以包含起始的路径位置和需要列出的文件夹所符合的特征，可以使用通配符"*"。
+C: A101 LIST "" ""
+S: * LIST (\Noselect) "/" ""
+S: A101 OK LIST Completed
+C: A102 LIST #news.comp.mail.misc ""
+S: * LIST (\Noselect) "." #news.
+S: A102 OK LIST Completed
+C: A103 LIST /usr/staff/jones ""
+S: * LIST (\Noselect) "/" /
+S: A103 OK LIST Completed
+C: A202 LIST ~/Mail/ %
+S: * LIST (\Noselect) "/" ~/Mail/foo
+S: * LIST () "/" ~/Mail/meetings
+S: A202 OK LIST completed
+
+5．
+APPEND <folder><attributes><date/time><size><mail data>
+APPEND命令允许Client上载一个邮件到指定的Folder（文件夹/邮箱）中。命令中包含了新邮件的属性、日期/时间、大小，随后是邮件数据。
+C: A003 APPEND saved-messages (\Seen) {310}
+C: Date: Mon， 7 Feb 1994 21:52:25 -0800 (PST)
+C: From: Fred Foobar <foobar@Blurdybloop.COM>
+C: Subject: afternoon meeting
+C: To: mooch@owatagu.siam.edu
+C: Message-Id: <B27397-0100000@Blurdybloop.COM>
+C: MIME-Version: 1.0
+C: Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+C:
+C: Hello Joe， do you think we can meet at 3:30 tomorrow?
+C:
+S: A003 OK APPEND completed
+
+6．
+SELECT <folder>
+SELECT命令让Client选定某个邮箱（Folder），表示即将对该邮箱（Folder）内的邮件作操作。邮箱标志的当前状态也返回给了用户，同时返回的还有一些关于邮件和邮箱的附加信息。
+C: A142 SELECT INBOX
+S: * 172 EXISTS
+S: * 1 RECENT
+S: * OK [UNSEEN 12] Message 12 is first unseen
+S: * OK [UIDVALIDITY 3857529045] UIDs valid
+S: * FLAGS (\Answered \Flagged \Deleted \Seen \Draft)
+S: * OK [PERMANENTFLAGS (\Deleted \Seen \*)] Limited
+S: A142 OK [READ-WRITE] SELECT completed
+
+7．
+FETCH <mail id><datanames>
+FETCH 命令用于读取邮件的文本信息，且仅用于显示的目的。包含两个参数，messageset：表示希望读取的邮件号列表，IAMP服务器邮箱中的每个邮件都有 一个唯一的ID标识，（邮件号列表参数可以是一个邮件号，也可以是由逗号分隔的多个邮件号，或者由冒号间隔的一个范围），IMAP服务器返回邮件号列表中 全部邮件的指定数据项内容。
+数据名参数确定能够被独立返回的邮件的一部分，下面我们看看各参数返回的邮件信息：
+ALL：只返回按照一定格式的邮件摘要，包括邮件标志、RFC822.SIZE、自身的时间和信封信息。IMAP客户机能够将标准邮件解析成这些信息并显示出来。
+BODY：只返回邮件体文本格式和大小的摘要信息。IMAP客户机可以识别这些细腻，并向用户显示详细的关于邮件的信息。其实是一些非扩展的BODYSTRUCTURE的信息。
+FAST：只返回邮件的一些摘要，包括邮件标志、RFC822.SIZE、和自身的时间。
+FULL：同样的还是一些摘要信息，包括邮件标志、RFC822.SIZE、自身的时间和BODYSTRUCTURE的信息。
+BODYSTRUCTUR： 是邮件的[MIME-IMB]的体结构。这是服务器通过解析[RFC-2822]头中的[MIME-IMB]各字段和[MIME-IMB]头信息得出来 的。包括的内容有：邮件正文的类型、字符集、编码方式等和各附件的类型、字符集、编码方式、文件名称等等。
+ENVELOPE：信息的信封结构。是服务器通过解析[RFC-2822]头中的[MIME-IMB]各字段得出来的，默认各字段都是需要的。主要包括：自身的时间、附件数、收件人、发件人等。
+FLAGS：此邮件的标志。
+INTERNALDATE：自身的时间。
+RFC822.SIZE：邮件的[RFC-2822]大小
+RFC822.HEADER：在功能上等同于BODY.PEEK[HEADER]，
+RFC822：功能上等同于BODY[]。
+RFC822.TEXT：功能上等同于BODY[TEXT]
+UID：返回邮件的UID号，UID号是唯一标识邮件的一个号码。
+BODY[section] <<partial>>：返回邮件的中的某一指定部分，返回的部分用section来表示，section部分包含的信息通常是 代表某一部分的一个数字或者是下面的某一个部分：HEADER, HEADER.FIELDS, HEADER.FIELDS.NOT, MIME, and TEXT。如果section部分是空的话，那就代表返回全部的信息，包括头信息。
+BODY[HEADER]返回完整的文件头信息。
+BODY[HEADER.FIELDS ()]：在小括号里面可以指定返回的特定字段。
+BODY[HEADER.FIELDS.NOT ()]：在小括号里面可以指定不需要返回的特定字段。
+BODY[MIME]：返回邮件的[MIME-IMB]的头信息，在正常情况下跟BODY[HEADER]没有区别。
+BODY[TEXT]：返回整个邮件体，这里的邮件体并不包括邮件头。
+现在我们遇到了一个问题，如果我们要单独提取邮件的附件怎么办？
+通过以上的命令我们是无法做到的，但是我们别忘了在section部分还有其他的方式可以来表示我们要提取的邮件的部分，那就的通过区段数来表示。那下面就让我们来看看什么是区段数。
+每 个邮件都至少有一个区段数，Non-[MIME-IMB]型的邮件和non-multipart [MIME-IMB]的邮件是没有经过MIME编码之后的信息的，那这样的信息只有一个区段数1。多区段型的信息被编排成一个连续的区段数，这和实际信息 里出现的是一样的。如果一个特定的区段有类型信息或者是多区段的，一个MESSAGE/RFC822类型的区段也含有嵌套的区段数，这些区段数是指向这些 信息区段的信息体的。
+说了那么多拗口的，现在我们讲的更简单易懂一些。在一个邮件体里面，区段数1代表的邮件的正文，区段数二代表的是第一个附 件，区段数三代表的是第二个附件，以此类推。在这些区段里，如果有哪个区段又是多区段的，比如2区段的内容格式是mulipart或者是 MESSAGE/RFC822类型的，那么这个区段又嵌套了多个子区段，嵌套的各子区段是用2.1，2.2……等等表示，类似，如果2.1又有嵌套，那么 还会有2.1.1，2.1.2等区段。这样的嵌套是没有限制的。下面我们通过例子来了解一下fetch具体是怎么按区段下载的。
+HEADER ([RFC-2822] header of the message)
+TEXT ([RFC-2822] text body of the message) MULTIPART/MIXED
+1 TEXT/PLAIN
+2 APPLICATION/OCTET-STREAM
+3 MESSAGE/RFC822
+3.HEADER ([RFC-2822] header of the message)
+3. TEXT ([RFC-2822] text body of the message) MULTIPART/MIXED
+3.1 TEXT/PLAIN
+3.2 APPLICATION/OCTET-STREAM
+4 MULTIPART/MIXED
+4.1 IMAGE/GIF
+4.1. MIME ([MIME-IMB] header for the IMAGE/GIF)
+4.2 MESSAGE/RFC822
+4.2. HEADER ([RFC-2822] header of the message)
+4.2. TEXT ([RFC-2822] text body of the message) MULTIPART/MIXED
+4.2.1 TEXT/PLAIN
+4.2.2 MULTIPART/ALTERNATIVE
+4.2.2.1 TEXT/PLAIN
+4.2.2.2 TEXT/RICHTEXT
+如果我们需要取第一个附件，那么命令就是：
+C:a2 fetch 4 body[2];
+取第三个区段的第一个子区段文本正文，命令就是：
+C:a2 fetch 4 body[3.1];
+取第四个区段的第二个子区段再嵌套的第一个子区段的文本正文，命令如下：
+C:a2 fetch 4 body[4.2.1]
+当然这个例子只是针对于一个特殊的邮件结构，一般的邮件应该都没有这么复杂的结构。
+再 接下来我们再看看最后一个参数有什么用？BODY[section]可以使用partial字段进行修改，该字段包含两个用“.”隔开的数字，第一个数 字、是八进制表示的希望显示的数据输出起始位置，第二个数字是八进制表示希望显示的数据长度。这项功能可以进一步设定输出格式，例如，如果你希望显示1号 邮件中邮件提的前1500个字符，可以使用命令：
+FETCH 1 BODY[TEXT]<0.1500>
+该命令取回邮件提的前1500个字符并定义为TEXT，如果邮件体少于1500个字符则返回整个邮件体。
+例：
+C: 100 FETCH 3：5  BODY[header.fields (Date From Subject)]  /*冒号表示间隔的一个范围：请求邮件从3到5之间所有邮件的Date：字段、 From：字段和 Subject：字段的信息*/
+S: *  3  FETCH  (BODY[HEADER.FIELDS (“DATE” “FROM” “SUBJECT”)]  {112}
+DATE: Tue, 14 Sep 1999 10:09:50 -500
+From: alex@shadrach.smallorg.org
+Subject: This is the first test message
+)
+S: *  4  FETCH  (BODY[HEADER.FIELDS (“DATE” “FROM” “SUBJECT”)]  {113}
+DATE: Tue, 14 Sep 1999 10:10:04 -500
+From: alex@shadrach.smallorg.org
+Subject: This is the second test message
+)
+S: *  5  FETCH  (BODY[HEADER.FIELDS (“DATE” “FROM” “SUBJECT”)]  {112}
+DATE: Tue, 14 Sep 1999 10:20:26 -500
+From: alex@shadrach.smallorg.org
+Subject: This is the first test message
+S: A100 OK FETCH completed
+C: A101 FETCH BODY[TEXT]
+S:* This is the fourth test message for IMAP
+S: A101 OK FETCH completed
+FETCH命令是IMAP协议里最复杂的命令。FETCH的命令参数很多、很复杂，但基本的特征是允许将邮件按照MIME结构拆解为零碎的部件来提取。例如，可以利用FETCH命令提取邮件头、某一个附件、或某一邮件附件头部的某一字段，等等。
+BODY.PEEK [<section>] <<partial>>：
+在 缺省设置时，宏BODY[<section>]<<partial>>会设置邮件的\SEEN标志。如果你想在不设 置\SEEN标志的情况下阅读邮件的部分信息，那么可以将该宏替代BODY .PEEK[section]，后者完成同前者一样的功能但不会设置该邮件的\SEEN标志。
+
+8．
+STORE <mail id><new attributes>
+STORE 命令用于修改指定邮件的属性，包括给邮件打上已读标记、删除标记，等等。STORE命令当前只有两个数据项类型可用，FLAGS：表示邮件的一组标志； FLAGS.SLIENT，表示一组邮件的标志，通过在两种数据项前加上加号或者减号可以进一步改变它们的执行情况，加号表示数据项的值添加到邮件中，减 号表示将数据项的值从邮件中删除。
+C: A003 STORE 2:4 +FLAGS (\Deleted)      /*冒号表示间隔的一个范围：给从2到4的邮件设置Deleted属性*/
+S: * 2 FETCH FLAGS (\Deleted \Seen)
+S: * 3 FETCH FLAGS (\Deleted)
+S: * 4 FETCH FLAGS (\Deleted \Flagged \Seen)
+S: A003 OK STORE completed
+
+9．
+CLOSE
+CLOSE命令表示Client结束对当前Folder（文件夹/邮箱）的访问，关闭邮箱该邮箱中所有标志为、DELETED的邮件就被从物理上删除。CLOSE没有命令参数。随后可以SELECT另一Folder。
+C: A341 CLOSE
+S: A341 OK CLOSE completed
+
+10．
+EXPUNGE
+EXPUNGE命令在不关闭邮箱的情况下删除所有的标志为、DELETED的邮件。EXPUNGE删除的邮件将不可以恢复。
+C: A202 EXPUNGE
+S: * 3 EXPUNGE
+S: * 3 EXPUNGE
+S: * 5 EXPUNGE
+S: * 8 EXPUNGE
+S: A202 OK EXPUNGE completed
+LOGOUT
+LOGOUT命令结束本次IMAP会话。
+C: A023 LOGOUT
+S: * BYE IMAP4rev1 Server logging out
+S: A023 OK LOGOUT completed
+(Server and client then close the connection)
+
+11.
+EXAMINE <mailbox>
+EXAMINE命令以只读方式打开邮箱，参数是需要打开的邮箱的名字，使用EXAMINE命令打开的邮箱不允许对邮件进行改动，因此不能增加或删除邮件的标志。
+
+12.
+SUBSCRIBE <mailbox>
+SUBSCRIBE命令用来在客户机的活动邮箱列表中增加一个邮箱，该命令只有一个参数，希望添加的邮箱名。
+C: A114 SUBSCRIBE new/anotherbox
+S: A114 OK SUBSCRIBE completed
+
+13.
+UNSUBSCRIBE <mailbox>
+UNSUBSCRIBE命令用来从活动列表中去掉一个邮箱，一个参数：希望去掉的邮箱名。
+C: A115 UNSUBSCRIBE new/anotherbox
+S: A115 OK SUBSCRIBE completed
+
+14.
+LSUB <folder><mailbox>
+LSUB命令修正了LIST命令，LIST返回用户$HOME目录下所有的文件，但LSUB命令只显示那些使用SUBSCRIBE命令设置为活动邮箱的文件。两个参数：邮箱路径和邮箱名。
+C: A116 LSUB “” *
+S:* LSUB () “/” stuff/junk
+S:* LSUB () “/” neebox
+S:* LSUB () “/” new/anotherbox
+S: A116 OK LSUB completed
+
+15.
+STATUS <mailbox>(<parameter1>  < parameter2>  ……<parameter5>)
+STATUS命令查询邮箱的当前状态。第一个参数是需要查询的邮箱名，第二个参数是客户机需要查询的项目列表（要查询显示的信息），当在圆括号中。STATUS可以在不使用SELECT命令（打开邮箱）或者EXAMINE（以只读方式打开邮箱）前提下获取邮箱的信息。
+STATUS命令可以获得的数据项
+项 目                 说  明
+MESSAGE         邮箱中的邮件总数
+RECENT         邮箱中标志为\RECENT的邮件数
+UIDNEXT         可以分配给新邮件的下一个UID
+UIDVALIDITY         邮箱的UID有效性标志
+UNSEEN         邮箱中没有被标志为\UNSEEN的邮件数
+C: A117 STATUS inbox  (message recent unseen)
+S:* STATUS inbox (MESSAGE 1 RECENT 0 UNSENN 0)
+S: A117 OK STATUS completed
+C: A118 STATUS newbox  (message recent unseen)
+S:* STATUS inbox (MESSAGE 1 RECENT 0 UNSENN 2)
+S: A118 OK STATUS completed
+
+16.
+CHECK
+CHECK命令用来在邮箱设置一个检查点。没有参数。就是IMAP中的sync命令。任何未完成的操作，例如从服务器内存向硬盘写数据，都将会被做完以保持邮箱的一致性状态。该命令确保乃村中的磁盘缓冲数据都被写到了磁盘上。
+
+17．
+SEARCH [CHARSET specification] (search criteria)
+命 令可以根据搜索条件在处于活动状态的邮箱中搜索邮件，然后显示匹配的邮件编号。字符集标志参数[CHARSET specification]由CHARSET和注册的字符集标志符组成，缺省的标志符是US-ASCⅡ，所以该参数长省略。search criteria：查询条件参数，明确查询的关键字和值。查询关键字有几十种。
+C: A119 SEARCH header subject another
+S: SEARCH 1 2
+S:* A119 OK SEARCH completed
+C: A120 SEARCH header subject another
+S: *SEARCH 2
+S: A120 OK SEARCH completed
+C: A121 SEARCH UNSEEN
+S: *SEARCH 1 2
+S: A120 OK SEARCH completed
+以上每个例子都在邮件头的Subject:字段中查询一个不同的单词。服务器返回条件的邮件号列表，如果没有匹配邮件则返回不带UID的SEARCH单词。
+
+18.
+COPY <mail id><mailboxname>
+COPY命令可以把邮件从一个邮箱复制到另一个邮箱，两个参数：mail id是希望从活动邮箱中复制的邮件的标号，mailboxname是希望邮件被复制到的邮箱。
+IAMP没有定义移动邮件的命令，移动操作相当于先把邮件复制到新邮箱中，然后对源邮箱中的邮件设置\DELETED标志。下一次执行检查点过后，新邮箱中的邮件被删除，新邮件就被显示出来。
+
+19.
+UID
+UID 命令和FETCH、COPY、STORE命令或者SEARCH命令一起使用，它允许这些命令使用邮件的UID号而不是在邮箱中的顺序号。UID号是唯一标 识邮件系统中邮件的32位证书。通常这些命令都使用顺序号来标识邮箱中的邮件，使用UID可以使IMAP客户机记住不同IMAP会话中的邮件。
+
+20.
+CAPABILITY
+CAPABILITY命令请求返回IMAP服务器支持的功能列表，服务器收到客户机发送的CAPABILITY命令后将返回该服务器所支持的功能。无参数。
+C: A122 CAPABILITY
+S:*A122 CAPABILITY IMAP4 IMAP4REVl NAMESPACE IDLE SCAN SORT   MAILBOX
+--REFERRALS [ic:ccc] LOGIN-REFERRALS AUTH=LOGIN THREAD=
+ORDERDSUBJECT
+S: A122 OK CAPABILITY completed
+
+21.
+NOOP
+NOOP命令什么也不做，用来向服务器发送自动命令，防止因长时间处于不活动状态而导致连接中断，服务器对该命令的响应始终为肯定。无参数。
+
+22.
+LOGOUT
+LOGOUT命令使当前登陆用户退出登陆并关闭所有打开的邮箱，任何做了\DELETED标志的邮件都将在这个时候被删除。
+
+这里不是所有的命令都列出来了，没有列出来的命令如果需要的可以去参考RFC3501。
+
+
+--------------------------------
+
+
+http://docs.python.org/release/2.6.7/library/imaplib.html
+http://yuji.wordpress.com/2011/06/22/python-imaplib-imap-example-with-gmail/
+
+imap.gmail.com
+Use SSL: Yes
+Port: 993 
+
+#Logging in to the inbox
+import imaplib
+mail = imaplib.IMAP4_SSL(server, port)
+mail.login(imap_user, imap_pass)
+
+mail.list()
+mail.select("inbox")
+
+# Getting all mail and fetching the latest
+result, data = mail.search(None, "ALL")
+ids = data[0]
+id_list = ids.split()
+latest_email_id = id_list[-1]
+
+result, data = mail.fetch(latest_email_id, "(RFC822)")
+raw_email = data[0][1]
+
+
+#Using UIDs instead of volatile sequential ids
+result, data = mail.uid('search', None, "ALL")
+latest_email_uid = data[0].split()[-1]
+result, data = mail.uid('fetch', latest_email_uid, '(RFC822)')
+raw_email = data[0][1]
+
+#Parsing Raw Emails
+import email
+email_message = email.message_from_string(raw_email)
+email_message['To']
+email.utils.parseaddr(email_message['From'])
+email_message.items()
+
+.....
+

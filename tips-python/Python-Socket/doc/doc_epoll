@@ -1,0 +1,306 @@
+
+select
+select最早于1983年出现在4.2BSD中，它通过一个select()系统调用来监视多个文件描述符的数组，当select()返回后，该数组中就绪的文件描述符便会被内核修改标志位，使得进程可以获得这些文件描述符从而进行后续的读写操作。
+select目前几乎在所有的平台上支持，其良好跨平台支持也是它的一个优点，事实上从现在看来，这也是它所剩不多的优点之一。
+select的一个缺点在于单个进程能够监视的文件描述符的数量存在最大限制，在Linux上一般为1024，不过可以通过修改宏定义甚至重新编译内核的方式提升这一限制。
+另外，select()所维护的存储大量文件描述符的数据结构，随着文件描述符数量的增大，其复制的开销也线性增长。同时，由于网络响应时间的延迟使得大量 TCP连接处于非活跃状态，但调用select()会对所有socket进行一次线性扫描，所以这也浪费了一定的开销
+
+poll
+poll在1986年诞生于System V Release 3，它和select在本质上没有多大差别，但是poll没有最大文件描述符数量的限制。
+poll和select同样存在一个缺点就是，包含大量文件描述符的数组被整体复制于用户态和内核的地址空间之间，而不论这些文件描述符是否就绪，它的开销随着文件描述符数量的增加而线性增大。
+另外，select()和poll()将就绪的文件描述符告诉进程后，如果进程没有对其进行IO操作，那么下次调用select()和poll()的时候将再次报告这些文件描述符，所以它们一般不会丢失就绪的消息，这种方式称为水平触发（Level Triggered）
+
+epoll
+直到Linux2.6才出现了由内核直接支持的实现方法，那就是epoll，它几乎具备了之前所说的一切优点，被公认为Linux2.6下性能最好的多路I/O就绪通知方法。
+epoll可以同时支持水平触发和边缘触发（Edge Triggered，只告诉进程哪些文件描述符刚刚变为就绪状态，它只说一遍，如果我们没有采取行动，那么它将不会再次告知，这种方式称为边缘触发），理论上边缘触发的性能要更高一些，但是代码实现相当复杂。
+epoll 同样只告知那些就绪的文件描述符，而且当我们调用epoll_wait()获得就绪文件描述符时，返回的不是实际的描述符，而是一个代表就绪描述符数量的值，你只需要去epoll指定的一个数组中依次取得相应数量的文件描述符即可，这里也使用了内存映射（mmap）技术，这样便彻底省掉了这些文件描述符在系统调用时复制的开销。
+另一个本质的改进在于epoll采用基于事件的就绪通知方式。在select/poll中，进程只有在调用一定的方法后，内核才对所有监视的文件描述符进行扫描，而epoll事先通过epoll_ctl()来注册一个文件描述符，一旦基于某个文件描述符就绪时，内核会采用类似callback的回调机制，迅速激活这个文件描述符，当进程调用epoll_wait()时便得到通知。
+
+
+select的特点：
+select 选择句柄的时候，是遍历所有句柄，也就是说句柄有事件响应时，select需要遍历所有句柄才能获取到哪些句柄有事件通知，因此效率是非常低。但是如果连接很少的情况下， select和epoll的LT触发模式相比， 性能上差别不大。
+这里要多说一句，select支持的句柄数是有限制的， 同时只支持1024个，这个是句柄集合限制的，如果超过这个限制，很可能导致溢出，而且非常不容易发现问题， TAF就出现过这个问题， 调试了n天，才发现：）当然可以通过修改linux的socket内核调整这个参数。
+
+epoll的特点：
+epoll对于句柄事件的选择不是遍历的，是事件响应的，就是句柄上事件来就马上选择出来，不需要遍历整个句柄链表，因此效率非常高，内核将句柄用红黑树保存的。
+对于epoll而言还有ET和LT的区别，LT表示水平触发，ET表示边缘触发，两者在性能以及代码实现上差别也是非常大的。
+epoll的LT和ET的区别
+
+LT：水平触发:
+效率会低于ET触发，尤其在大并发，大流量的情况下。但是LT对代码编写要求比较低，不容易出现问题。LT模式服务编写上的表现是：只要有数据没有被获取，内核就不断通知你，因此不用担心事件丢失的情况。
+
+ET：边缘触发:
+效率非常高，在并发，大流量的情况下，会比LT少很多epoll的系统调用，因此效率高。但是对编程要求高，需要细致的处理每个请求，否则容易发生丢失事件的情况。
+
+
+
+EPOLL事件有两种模型：
+    Level Triggered (LT)
+        LT(level triggered)是缺省的工作方式，并且同时支持block和no-block socket.
+        在这种做法中，内核告诉你一个文件描述符是否就绪了，然后你可以对这个就绪的fd进行IO操作
+        如果你不作任何操作，内核还是会继续通知你的，所以，这种模式编程出错误可能性要小一点, 传统的select/poll都是这种模型的代表．
+
+    Edge Triggered (ET)
+        ET(edge- triggered) 是高速工作方式，只支持no-block socket
+        在这种模式下，当描述符从未就绪变为就绪时，内核通过epoll告诉你
+        然后它会假设你知道文件描述符已经就绪，并且不会再为那个文件描述符发送更多的就绪通知，直到你做了某些操作导致那个文件描述符不再为就绪状态了
+        (比如，你在发送，接收或者接收请求，或者发送接收的数据少于一定量时导致 了一个EWOULDBLOCK 错误）
+        但是请注意，如果一直不对这个fd作IO操作(从而导致它再次变成未就绪)，内核不会发送更多的通知(only once)
+        不过在TCP协议中，ET模式的加速效用仍需要更多的benchmark确认（这句话不理解）)
+
+
+常用的事件类型:
+    EPOLLIN ：表示对应的文件描述符可以读（包括对端SOCKET正常关闭）；
+    EPOLLOUT：表示对应的文件描述符可以写；EPOLLOUT事件的处理策略就是, 先尝试直接发送.如果发送不完整，就buffer住等下一轮再发
+    EPOLLPRI：表示对应的文件描述符有紧急的数据可读（这里应该表示有带外数据到来）；
+    EPOLLERR：表示对应的文件描述符发生错误；
+    EPOLLHUP：表示对应的文件描述符被挂断；
+    EPOLLET： 将EPOLL设为边缘触发(Edge Triggered)模式，这是相对于水平触发(Level Triggered)来说的。
+    EPOLLONESHOT：只监听一次事件，当监听完这次事件之后，如果还需要继续监听这个socket的话，需要再次把这个socket加入到EPOLL队列里
+
+
+将http协议转化为rpc协议:
+    那么就需要对传入的http请求串进行解析，取出其中有用的部分封装成rpc消息传与后端
+    对与http协议的描述见 http://www.shenmiguo.com/archives/2009/147_http-format.html 主要是GET和POST方法。
+    有很多开源库来完成这个协议转化的比如XML-RPC，具体需要根据实际情况使用
+
+
+1. Thread + select
+    解决问题的一种途径是线程池（Thread Pool），并在各个线程中运行单独的select()以实现对网络事件的多路分离
+    select其实的内部机制依赖于fd_set，说白了就是一个数组，select通过遍历这个数组中的所有socket handle，通过ioctl判断该handle是否被激活的socket事件
+    因此，我们可以对select得出两个结论：
+    1）select可以在多线程中分离使用，但是我们需要实现一个机制，以便在多个线程之间平均的划分socket handles，从而在各个线程之间平均分摊负载。
+    2）由于需要不停的（循环的）遍历一个fd_set数组，当这个数组变得很大的时候select就会显得效率低下（简直难以忍受，这就是为什么在windows中FD_SETSIZE的缺省大小为64的原因） 
+
+    select的选择能力有限，假设我们使用最大的FD_SETSIZE=1024，这样，我们需要10个左右不停循环的线程，由于每个线程每次遍历fd_set所花费的时间较长，10个不停循环的线程将很有可能使服务进程阻塞，占用大量的CPU资源
+
+
+2. Thread + epoll
+    用poll或epoll多路分离来解决上面这个瓶颈问题
+    poll和select其实是采用的同种机制，因此其效率不会比select高多少
+    epoll提供 Edge Triggered ( ET ) 和Level Triggered ( LT )两种方式的多路事件分离方法
+        使用LT方式时，其效果与select和poll相似，顶多可以看成是一个更快的poll；
+        使用ET方式时, 其效率在处理具有大量idle connection的时候明显高于select和poll
+
+    前面提出的10K连接数问题已经基本解决, 但这还只是个开始，我们常见一些服务能够支持1M以上的同时连接数, 为达到这个目的，需要将线程池和epoll结合起来
+
+    设计思路则是：
+    创建一个线程池(50)  
+     -> 生成一个socket sfd并监听某端口，同时生成一个epoll epfd文件描述符并将sfd注册倒epfd中
+     -> 当epoll发现IO有变动的时候，会拿到是什么类型的IO变动:
+            如果是请求类型的变动，则建立新的连接，并同时加入epoll监听；
+            如果不是新的连接，则说明是已有连接的数据到达，则放入循环队列（线程池中的线程会自动处理队列里面的东西）
+
+3. TCP并发最大打开文件数据的限制
+    在Linux平台上，无论编写客户端程序还是服务端程序，在进行高并发TCP连接处理时，最高的并发数量都要受到系统对用户单一进程同时可打开文件数量的限制
+    (这是因为系统为每个TCP连接都要创建一个socket句柄，每个socket句柄同时也是一个文件句柄)
+    可使用ulimit命令查看系统允许当前用户进程打开的文件数限制：
+    $ ulimit -n
+    1024
+    这表示当前用户的每个进程最多允许同时打开1024个文件
+
+    对于想支持更高数量的TCP并发连接的通讯处理程序，就必须修改Linux对当前用户的进程同时打开的文件数量的软限制(soft limit)和硬限制(hardlimit)
+    第一步，修改/etc/security/limits.conf文件，在文件中添加如下行：
+    * soft nofile 10240
+    * hard nofile 10240 
+        '*'号表示修改所有用户的限制；
+        soft或hard指定要修改软限制还是硬限制；
+        10240则指定了想要修改的新的限制值，即最大打开文件数(请注意软限制值要小于或等于硬限制)
+
+    第二步，修改/etc/pam.d/login文件，在文件中添加如下行：
+    session required /lib/security/pam_limits.so
+    这是告诉Linux在用户完成系统登录后，应该调用pam_limits.so模块来设置系统对该用户可使用的各种资源数量的最大限制(包括用户可打开的最大文件数限制)
+    而pam_limits.so模块就会从/etc/security/limits.conf文件中读取配置来设置这些限制值。修改完后保存此文件
+
+    第三步，查看Linux系统级的最大打开文件数限制，使用如下命令：
+    $ cat /proc/sys/fs/file-max
+    12158
+    这表明这台Linux系统最多允许同时打开(即包含所有用户打开文件数总和)12158个文件，是Linux系统级硬限制，所有用户级的打开文件数限制都不应超过这个数值
+    通常这个系统级硬限制是Linux系统在启动时根据系统硬件资源状况计算出来的最佳的最大同时打开文件数限制，
+    如果没有特殊需要，不应该修改此限制，除非想为用户级打开文件数限制设置超过此限制的值, 修改此硬限制的方法是修改/etc/rc.local脚本，在脚本中添加如下行：
+    $ echo 22158 > /proc/sys/fs/file-max
+    这是让Linux在启动完成后强行将系统级打开文件数硬限制设置为22158
+
+4. TCP并发网络内核方面的限制
+    在Linux上编写支持高并发TCP连接的客户端通讯处理程序时，有时会发现尽管已经解除了系统对用户同时打开文件数的限制
+    但仍会出现并发TCP连接数增加到一定数量时，再也无法成功建立新的TCP连接的现象。出现这种现在的原因有多种
+
+    a). 内核编译时默认设置的本地端口号范围可能太小，因此需要修改此本地端口范围限制:
+    第一步，修改/etc/sysctl.conf文件，在文件中添加如下行：
+    net.ipv4.ip_local_port_range = 1024 65000
+        这表明将系统对本地端口范围限制设置为1024~65000之间
+        请注意，本地端口范围的最小值必须大于或等于1024；而端口范围的最大值则应小于或等于65535
+
+    第二步，执行sysctl命令：
+    $ sysctl -p
+        如果系统没有错误提示，就表明新的本地端口范围设置成功
+        如果按上述端口范围进行设置，则理论上单独一个进程最多可以同时建立60000多个TCP客户端连接
+
+    b). 因为Linux网络内核的IP_TABLE防火墙对最大跟踪的TCP连接数有限制
+        由于IP_TABLE防火墙在内核中会对每个TCP连接的状态进行跟踪，跟踪信息将会放在位于内核内存中的conntrackdatabase中，这个数据库的大小有限
+        当系统中存在过多的TCP连接时，数据库容量不足，IP_TABLE无法为新的TCP连接建立跟踪信息，于是表现为在connect() 调用中阻塞
+        此时就必须修改内核对最大跟踪的TCP连接数的限制，方法同修改内核对本地端口号范围的限制是类似的： 
+    第一步，修改/etc/sysctl.conf文件，在文件中添加如下行：
+    net.ipv4.ip_conntrack_max = 10240
+        这表明将系统对最大跟踪的TCP连接数限制设置为10240
+        请注意，此限制值要尽量小，以节省对内核内存的占用
+
+    第二步，执行sysctl命令：
+    $ sysctl -p
+        如果系统没有错误提示，就表明系统对新的最大跟踪的TCP连接数限制修改成功
+        如果按上述参数进行设置，则理论上单独一个进程最多可以同时建立10000多个TCP客户端连接
+
+5. 使用支持高并发网络I/O的编程技术 
+    Linux上编写高并发TCP连接应用程序时，必须使用合适的网络I/O技术和I/O事件分派机制
+    可用的I/O技术有:
+        同步I/O
+        非阻塞式同步I/O
+        异步I/O
+    
+    在高TCP并发的情形下，如果使用同步I/O，这会严重阻塞程序的运转，除非为每个TCP连接的 I/O创建一个线程。但是，过多的线程又会因系统对线程的调度造成巨大开销
+    因此，在高TCP并发的情形下使用同步I/O是不可取的，这时可以考虑使用非阻塞式同步I/O或异步I/O:
+    非阻塞式同步I/O的技术包括使用:
+        select()
+        poll()
+        epoll等机制
+    异步I/O的技术就是使用AIO
+
+    从I/O事件分派机制来看，使用select()是不合适的，因为它所支持的并发连接数有限(通常在1024个以内)
+    如果考虑性能，poll()也是不合适的，尽管它可以支持的较高的TCP并发数，但是由于其采用“轮询”机制，当并发数较高时，其运行效率相当低，并可能存在I/O事件分派不均，导致部分 TCP连接上的I/O出现“饥饿”现象
+    而如果使用epoll或AIO，则没有上述问题(早期Linux内核的AIO技术实现是通过在内核中为每个I/O 请求创建一个线程来实现的，这种实现机制在高并发TCP连接的情形下使用其实也有严重的性能问题,但在最新的Linux内核中，AIO的实现已经得到改进)。 
+
+    综上所述，在开发支持高并发TCP连接的Linux应用程序时，应尽量使用epoll或AIO技术来实现并发的TCP连接上的I/O控制，这将为提升程序对高并发TCP连接的支持提供有效的I/O保证
+
+
+http://scotdoyle.com/python-epoll-howto.html
+http://blogold.chinaunix.net/u3/108641/showart.php?id=2211966
+http://moonbingbing.blogspot.com/2010/11/pythonlinuxepoll.html
+
+
+epoll_server.py
+1. 初始化epoll, 注册被连接socket的EPOLLIN事件
+epoll = select.epoll()
+epoll.register(srv.fileno(), select.EPOLLIN | select.EPOLLET)
+
+connections = {}
+requests = {}
+responses = {}
+
+    初始化epoll描述字
+    注册被动连接socket的 EPOLLIN事件，并且设置为ET电平触发
+    客户端对端主动连接信息:
+        socket连接connections
+        socket请求requests
+        socket响应responses，且均为socket的fileno为key的dict
+
+    [注]： 如果是针对客户端：
+        初始化客户端连接，监听EPOLLOUT；与服务器模型相反，服务器模型初始化监听EPOLLIN；
+        epoll.register(s.fileno(), select.EPOLLOUT | select.EPOLLET)
+
+
+2. 反复监听epoll所注册的socket描述字
+while True: 
+    events = epoll.poll()                
+    for fileno, event in events:
+        print fileno, event
+        do_epoll(fileno, event)               
+
+    当服务器状态为达到终止状态时，反复监听epoll所注册的socket描述字；
+    对epoll返回的描述字fileno和事件event，调用 do_epoll(fileno, event) 完成相应的动作；
+
+3.
+def do_epoll(fileno, event):
+    try:
+        if fileno == srv.fileno():
+            accept_epoll()
+        elif event & select.EPOLLIN:                        
+            do_request(fileno)
+        elif event & select.EPOLLOUT:
+            do_response(fileno)
+        elif event & select.EPOLLHUP:
+            hup_epoll(fileno)
+    except:
+        raise
+
+    当事件来自于服务器被动连接socket时，表示有客户端连接请求到达，调用accept_epoll(), 接受新的客户端连接，并且注册此连接的EPOLLIN事件；
+    当事件来自服务器端与客户端的链接socket，并且是EPOLLIN可读事件到达，调用do_request(fileno),处理可读事件；
+    当事件来自服务器端与客户端的链接socket，并且是EPOLLOUT可写事件到达，调用do_response(fileno),处理可读事件；
+    当异常事件来自服务器端与客户端的链接socket，调用hup_epoll(fileno), 关闭此连接
+
+    [注]：如果是针对客户端
+        request和response是针对连接请求而言，因此客户端与服务器段的监听事件与监听动作正好相反
+
+
+4. accept_epoll(), 接受新的客户端连接，并且注册此连接的EPOLLIN事件 
+def accept_epoll( ):
+    try:
+        while True:
+            connection, address = srv.accept()
+            epoll.register(connection.fileno(), select.EPOLLIN | select.EPOLLHUP | select.EPOLLET)
+            connections[connection.fileno()] = connection
+            requests[connection.fileno()] = b''
+            responses[connection.fileno()] = b''
+    except socket.error:
+        pass
+
+    服务器端接受客户端连接请求，并以ET模式注册EPOLLIN事件；
+    初始化改连接的相关数据结构；
+
+
+5. 调用do_request(fileno),处理可读事件, 从缓冲区接收数据 recv(): 
+def do_request(fileno):        
+    requests[fileno] += epoll_util.recv_epoll(connections[fileno])
+    request = requests[fileno].strip() 
+    if request == epoll_util.hello_request:
+        responses[fileno] = epoll_util.greeting_response
+    elif request == epoll_util.quit_request:
+        hup_epoll(fileno)
+        return
+    elif request == epoll_util.close_request:
+        hup_epoll(fileno)
+        status = epoll_util.close_status
+        return
+    else:
+        do_operation(fileno)
+    epoll.modify(fileno, select.EPOLLOUT | select.EPOLLET)
+
+    调用 epoll_util.recv_epoll(connection)方法读取请求报文；
+    对于不同的请求，有不同的动作:
+        请求是hello时，将response设置greeting；
+        请求是quit，服务器端断开客户端连接；
+        请求是close时，断开客户端连接，并关闭服务器；
+        请求是其他时，调用self.do_operation(fileno)完成其他逻辑，默认是将response设置为done；
+        报文常量见epoll_util.py文件；
+    完成处理逻辑后，监听响应EPOLLOUT写事件
+
+
+6. 调用do_response(fileno),处理可读事件, 发送数据 send():
+def do_response(fileno):
+    epoll_util.send_epoll(connections[fileno], responses[fileno])
+    requests[fileno] = b''
+    epoll.modify(fileno, select.EPOLLIN | select.EPOLLET)
+
+    调用 epoll_util.send_epoll(connection， response)方法发送响应报文；
+    清空请求，self.requests[fileno]
+    监听请求EPOLLIN读事件
+
+7. hup_epoll (fileno)处理挂起事件：
+def hup_epoll(fileno):
+    epoll.unregister(fileno)
+    connections[fileno].close()
+    del connections[fileno]
+    del requests[fileno]
+    del responses[fileno]
+
+    解除epoll对此描述字的监听；
+    关闭此描述字；
+    清空此描述字的其他信息；
+
+8. close_epoll ()关闭服务器监听：
+def close_epoll():
+    epoll.unregister(srv.fileno())
+    srv.close()
+    epoll.close()
+
+
+libevent对select, poll, epoll, kqueue

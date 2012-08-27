@@ -1,0 +1,122 @@
+MIME，英文全称为“Multipurpose Internet Mail Extensions”，即多用途互联网邮件扩展，是目前互联网电子邮件普遍遵循的邮件技术规范。
+在MIME出现之前，互联网电子邮件主要遵循由RFC 822所制定的标准，电子邮件一般只用来传递基本的ASCII码文本信息;
+MIME在 RFC 822的基础上对电子邮件规范做了大量的扩展，引入了新的格式规范和编码方式，在MIME的支持下，图像、声音、动画等二进制文件都可方便的通过电子邮件来进行传递，极大地丰富了电子邮件的功能。目前互联网上使用的基本都是遵循MIME规范的电子邮件
+
+MIME技术规范的完整内容由RFC 2045-2049定义，包括了信息格式、媒体类型、编码方式等各方面的内容，这里只介绍其中的一些关键的格式和规范
+
+1. 域
+    MIME邮件的基本信息、格式信息、编码方式等重要内容都记录在邮件内的各种域中;
+    域的基本格式：{域名}：{内容}
+        域由域名后面跟“：”再加上域的信息内容构成
+        一条域在邮件中占一行或者多行
+        域的首行左侧不能有空白字符，比如空格或者制表符，占用多行的域其后续行则必须以空白字符开头
+        域的信息内容中还可以包含属性，属性之间以“;”分隔，属性的格式如下：{属性名称}=”{属性值}”
+    下面是一封示例邮件的内容，其中行1-5、行8都是单行的域，行6-7则是一个多行的域，并带有一个名为charset的属性，属性值为us- ascii:
+    行1 From： ”suntao” <suntao@fimmu.com>
+    行2 To： <yxj@fimmu.com>
+    行3 Subject： hello world
+    行4 Date： Mon， 9 Oct 2006 16：51：34 +0800
+    行5 MIME-Version： 1.0
+    行6 Content-Type： text/plain;
+    行7             charset="us-ascii"
+    行8 Date： Mon， 9 Oct 2006 16：48：25 +0800
+    行9
+    行10 Hello world
+
+    综上, 一个邮件常规的域有:
+        From: 
+        To: 
+        Subject: 
+        Date: 
+        MIME-Version: 
+        Content-Type: 
+
+2. Content-Type域
+    Content-Type域定义了邮件中所含各种内容的类型以及相关属性
+    邮件所含的文本、超文本、附件等信息都按照对应Content-Type域所指定的媒体类型、存储位置、编码方式等信息存储在邮件中
+    Content-Type域基本格式：Content-Type：{主类型}/{子类型}
+    上面邮件中邮件中的行6-7就是一个Content-Type域，主类型为text，子类型为plain，字符集属性为us-ascii
+
+    MIME邮件中常见的主类型
+    主类型          常见属性    参数含义
+    text            charset     文本信息所使用的字符集
+    image           name        图像的名称
+    application     name        应用程序的名称
+    multipart       boundary    邮件分段边界标识
+
+
+3. multipart类型
+    multipart是Content-Type的一个主类型
+    MIME邮件中各种不同类型的内容是分段存储的，各个段的排列方式、位置信息都通过Content-Type域的multipart类型来定义
+    multipart类型主要有三种子类型：mixed、alternative、related - > multipart/mixed, multipart/alternative, multipart/related
+
+    multipart/mixed类型 [邮件中含有附件]
+        如果一封邮件中含有附件，那邮件的Content-Type域中必须定义multipart/mixed类型
+        邮件通过multipart/mixed类型中定义的boundary标识将附件内容同邮件其它内容分成不同的段。基本格式如下：
+        Content-Type： multipart/mixed;
+        boundary="{分段标识}"
+
+    multipart/alternative类型 [邮件中含有超文本html]
+        MIME邮件可以传送超文本内容，但出于兼容性的考虑，一般在发送超文本格式内容的同时会同时发送一个纯文本内容的副本
+        如果邮件中同时存在纯文本和超文本内容，则邮件需要在Content-Type域中定义multipart/alternative类型，
+        邮件通过其boundary中的分段标识将纯文本、超文本和邮件的其它内容分成不同的段。基本格式如下：
+        Content-Type： multipart/alternative;
+        boundary="{分段标识}"
+
+    multipart/related类型[内嵌资源, 如邮件背景图片]
+        MIME邮件中除了可以携带各种附件外，还可以将其它内容以内嵌资源的方式存储在邮件中
+        比如我们在发送html格式的邮件内容时，可能使用图像作为 html的背景
+        html文本会被存储在alternative段中，而作为背景的图像则会存储在multipart/related类型定义的段中。基本格式如下：
+        Content-Type： multipart/related;
+        type="multipart/alternative";
+        boundary="{分段标识}"
+
+4. Content-Transfer-Encoding域
+    MIME邮件可以传送图像、声音、视频以及附件，这些非ASCII码的数据都是通过一定的编码规则进行转换后附着在邮件中进行传递的
+    编码方式存储在邮件的Content-Transfer-Encoding域中
+    一封邮件中可能有多个Content-Transfer-Encoding域，分别对应邮件不同部分内容的编码方式
+    目前MIME邮件中的数据编码普遍采用Base64编码或Quoted-printable编码来实现
+
+    Base64编码
+    Base64编码的目的是将输入的数据全部转换成由64个指定ASCII字符组成的字符序列， 这64个字符由{' A' -' Z' ， ' a' -' z' ， ' 0' -' 9' ， ' +' ， ' /' }构成
+    编码时将需要转换的数据每次取出6bit，然后将其转换成十进制数字，这个数字的范围最小为0，最大为63;
+    然后查询{' A' -' Z' ， ' a' -' z' ， ' 0' -' 9' ， ' +' ， ' /' }构成的字典表，输出对应位置的ASCII码字符
+    这样每3个字节的数据内容会被转换成4个字典中的ASCII码字符，当转换到数据末尾不足3个字节时，则用“=”来填充。
+
+    Quoted-printable编码
+    Quoted-printable编码的目的也是将输入的信息转换成可打印的ASCII码字符，但它是根据信息的内容来决定是否进行编码，
+    如果读入的字节处于33-60、62-126范围内的，这些都是可直接打印的ASCII字符，则直接输出
+    如果不是，则将该字节分为两个4bit，每个用一个16进制数字来表示，然后在前面加“=”，这样每个需要编码的字节会被转换成三个字符来表示。
+
+
+5. MIME邮件信息提取
+从上面的分析可以看出，MIME邮件传递的实际是一个经过特殊编码并以约定格式排列的字符序列
+我们只需要提取存储在邮件各种域中的格式、位置和编码信息，按照根据这些信息从字符序列中提取出对应的字符内容并对其进行反向解码，就可以得到我们需要的有关内容
+
+    收件人/发件人/邮件主题的提取
+    收件人、发件人、邮件主题是一封邮件的基本组成信息，分别存邮件的From域、To域、Subject域中。
+    开发中只需要通过正则表达式来匹配这些指定的域，然后从匹配结果中取出相关信息即可。
+
+    multipart分段信息的提取
+    邮件通过multipart类型将内容分隔成不同的段，各段之间的边界标识由对应multipart类型的boundary属性定义。
+    要从邮件中提取出需要的内容，首先需要提取出邮件中的分段信息。
+
+    邮件附件的提取
+    邮件中的附件信息由对应的Content-Type域、Content-Transfer-Encoding域、Content-Disposition 域和multipart/mixed类型定义
+    前三个域定义附件的类型、名称和编码方式，multipart/mixed则定义附件同邮件其它内容的分段标识。
+    基本格式如下：
+    --boundary分段标识
+    Content-Type： application/msword;
+    name="readme.doc"
+    Content-Transfer-Encoding： base64
+    Content-Disposition： attachment;
+    filename=" readme.doc "
+    ……
+    文件内容的Base64编码
+    ……
+    --boundary分段标识
+
+http://www.pythonclub.org/python-files/mime-type
+
+
+
