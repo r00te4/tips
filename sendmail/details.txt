@@ -1,0 +1,6 @@
+说明：
+
+数据库里面保存的是UTF8编码。从django读出来都是正常，不乱码的。所以排除数据库的编码问题。
+
+从数据库里面直接读出来的时候就已经不是 unicode 
+infoRes=cursor.fetchmany(10)
