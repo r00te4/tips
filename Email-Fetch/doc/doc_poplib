@@ -1,0 +1,182 @@
+
+POP 协议:
+    POP3全称为Post Office Protocol version3，即邮局协议第3版。
+    它被用户代理用来邮件服务器取得邮件。
+    POP3采用的也是C/S通信模型，对应的RFC文档为RFC1939。
+
+    POP3协议中有三种状态，认正状态，处理状态，和更新状态。 
+    命令的执行可以改变协议的状态，而对于具体的某命令，它只能在具体的某状态下使用，这些请参看RFC193。
+
+    客户机与服务器刚与服务器建立连接时，它的状态为认证状态；
+    一旦客户机提供了自己身份并被成功地确认，即由认可状态转入处理状态； 
+    在完成相应的操作后客户机发出QUIT命令，则进入更新状态，更新之后又重返认可状态；
+    当然在认可状态下执行QUIT命令，可释放连接。
+
+    POP3相对于因特网报文存取协议IMAP（Internet Message Access Protocol）的最大的不足是：它只是一个脱机协议，客户与服务器的交互性不是特别好。
+    例如不能直接在邮箱中创建文件夹，不太好选择性地下载邮件的某部分（虽然TOP命令部分地实现了这个功能，但交互性不是很好）等。
+    然而，它也有自己的优势，那就是协议简单，容易实现，成本低，这是POP3用得很广泛而IMAP几近淘汰的最重要的原因。
+
+class poplib.POP3(host[, port[, timeout]])
+    This class implements the actual POP3 protocol. the standard POP3 port (110) is used
+
+class poplib.POP3_SSL(host[, port[, keyfile[, certfile]]])
+    This is a subclass of POP3 that connects to the server over an SSL encrypted socket. 
+
+POP3.set_debuglevel(level)
+POP3.getwelcome()
+POP3.user(username)
+POP3.pass_(password)
+POP3.stat()
+POP3.list([which])
+POP3.retr(which)            #返回一个元组:(状态信息,邮件,邮件尺寸) hdr,message,octet=server.retr(1) 读去第一个邮件信息
+POP3.dele(which) 
+POP3.rset()
+POP3.noop()
+POP3.quit()
+
+------------------------------
+
+email 方法:
+msg = email.message_from_string(string.join(message, '\n'))     #生成了一个email.Message实例
+msg['From']
+msg['To']
+msg['Date']
+msg['Subject']
+
+msg.get('From')
+msg.get('To')
+msg.get('Date')
+msg.get('Subject')
+
+FromAddr=email.utils.parseaddr(msg['from'])[1]
+ToAddr=email.utils.parseaddr(msg['to'])[1]
+email.Header.decode_header(msg['subject'])                   #(解码后的字串,字符编码)
+
+msg.is_multipart()
+msg.walk()
+for part in msg.walk():
+    part.is_multipart()
+    part.get_content_type()
+    part.get_payload(decode=True)
+    part.get_charsets()[0]
+    part.get_all('Content-Disposition')
+    part.get_all('Content-ID')
+    part.get_filename()
+    
+    has_key(name)               Return true if the message contains a header field named name, otherwise return false.
+    keys()                      Return a list of all the message’s header field names.
+    values()                    Return a list of all the message’s field values.
+    items()                     Return a list of 2-tuples containing all the message’s field headers and values.
+    get(name[, failobj])        Return the value of the named header field. 
+    get_all(name[, failobj])    Return a list of all the values for the field named name. If no such named headers in the message, failobj is returned(None)
+    get_params([failobj[, header[, unquote]]])          Return the message’s Content-Type parameters, as a list.
+    get_param(param[, failobj[, header[, unquote]]])    Return the value of the Content-Type header’s parameter param as a string. 
+    get_charsets([failobj])     Return a list containing the character set names in the message.
+
+-----------------------------
+
+Python chardet 字符编码判断
+使用 chardet 可以很方便的实现字符串/文件的编码检测。尤其是中文网页，有的页面使用GBK/GB2312，有的使用UTF8，如果你需要去爬一些页面，知道网页编码很重要的，虽然HTML页面有charset标签，但是有些时候是不对的
+    chardet官网 http://chardet.feedparser.org/
+    chardet.detect(rawdata)
+
+
+-----------------------
+MIME协议
+MIME协议是对RFC822文档的升级和补充，它描述了如何生成一封复杂邮件。通常我们把MIME协议描述的邮件称之为MIME邮件，MIME协议描述的数据称之为MIME消息。
+对于一封复杂邮件，如果包含了多个不同的数据，MIME协议规定了要使用分隔线对多段数据进行分隔，并使用Content-Type头字段对数据的类型、以及多个数据之间的关系进行描述。
+
+•Content-type：字段
+    – 数据类型 
+        以“主类型/子类型”的形式出现，主类型有text、image、audio、video、application、message等，分别表示文本、图片、音频、视频、应用程序、组合结构、消息等
+        每个主类型下面都有多个子类型，例如text主类型包含plain、html、xml、css等子类型。
+    – 数据的关系
+        multipart/mixed、multipart/related、multipart/alternative
+
+•Content-Disposition头字段
+    – Content-Disposition 头字段用于指定邮件阅读程序处理数据内容的方式
+        有inline和attachment两种标准方式，inline表示直接处理，而attachment表示当作附件处理。
+        如果将Content-Disposition设置为attachment，在其后还可以指定filename属性，如下所示： Content-Disposition: attachment; filename="1.bmp"
+        上面的MIME头字段表示MIME消息体的内容为邮件附件，附件名“1.bmp”
+
+•Content-ID头字段
+    – Content-ID头字段用于为“multipart/related”组合消息中的内嵌资源指定一个唯一标识号，在HTML格式的正文中可以使用这个唯一标识号来引用该内嵌资源。
+        例如，假设将一个表示内嵌图片的MIME消息的Content-ID头字段设置为如下形式：
+            Content-ID: it315logo_gif
+        那么，在HTML正文中就需要使用如下HTML语句来引用该图片资源：
+            <img src="cid:it315logo_gif">
+        注意，在引用Content-ID头字段标识的内嵌资源时，要在资源的唯一标识号前面加上“cid:”，以说明要采用唯一标识号对资源进行引用
+
+
+---------------------------
+
+邮件头的域
+    邮件头包含了发件人、收件人、主题、时间、MIME版本、邮件内容的类型等重要信息。
+    每条信息称为一个域，由域名后加“: ”和信息内容构成，可以是一行，较长的也可以占用多行。
+    域的首行必须“顶头”写，即左边不能有空白字符（空格和制表符）；
+    续行则必须以空白字符打头，且第一个空白字符不是信息本身固有的，解码时要过滤掉。
+    非标准的、自定义域名都以X-开头，例如X-Mailer, X-MSMail-Priority等，通常在接收和发送邮件的是同一程序时才能理解它们的意义。
+
+域名                            含义                添加者
+Received                        传输路径            各级邮件服务器
+Return-Path                     回复地址            目标邮件服务器
+Delivered-To                    发送地址            目标邮件服务器
+Reply-To                        回复地址            邮件的创建者
+From                            发件人地址          邮件的创建者
+To                              收件人地址          邮件的创建者
+Cc                              抄送地址            邮件的创建者
+Bcc                             暗送地址            邮件的创建者
+Date                            日期和时间          邮件的创建者
+Subject                         主题                邮件的创建者
+Message-ID                      消息ID              邮件的创建者
+MIME-Version                    MIME版本            邮件的创建者
+Content-Type                    内容的类型          邮件的创建者
+Content-Transfer-Encoding       内容的传输编码方式  邮件的创建者
+
+----------------------------
+
+Content-Type域
+    Content-Type域，即内容类型域，它用来说明传输的内容的类型。
+    Cotent-Type域又由“主类型/子类型”构成
+    主类型有text, image, audio, video, application, multipart, message等，分别表示文本、图片、音频、视频、应用、分段、消息等。
+    每个主类型都可能有多个子类型，如text类型就包含plain, html, xml, css等子类型。
+    以X-开头的主类型和子类型，同样表示自定义的类型，未向IANA正式注册，但大多已经约定成俗了。如application/x-zip-compressed是ZIP文件类型。
+
+主类型          参数名              含义
+text            charset             字符集
+image           name                名称
+application     name                名称
+multipart       boundary            边界
+
+------------------------------
+
+Content-Transfer-Encoding域
+    Content-Transfer-Encoding域即传送编码域，它用来说明后面传输的内容的编码方式。
+    Content-Transfer-Encoding共有Base64, Quoted-printable, 7bit, 8bit, Binary等几种。其中7bit是缺省的编码方式。
+    电子邮件源码最初设计为全部是可打印的ASCII码的形式。非ASCII码的文本或数据要编码成要求的格式。
+    Base64, Quoted-Printable是在非英语国家使用最广使的编码方式。
+    Binary方式只具有象征意义，而没有任何实用价值。关于Base64编码和Quoted-Printable编码请参考RFC文档或另外一篇文章《SMTP协议分析》。
+    近年来，国内多数邮件服务器已经支持8bit方式，因此只在国内传输的邮件，特别是在邮件头中，可直接使用8bit编码，对汉字不做处理。
+    如果邮件要出国，还是老老实实地按Base64或Quoted-printable编码才行
+
+
+-----------------------------
+邮件体
+    邮件体的类型由邮件头的“Content-Type”域指出。常见的简单类型有text/plain(纯文本)和text/html(超文本)。
+    源码中出现的multipart类型，是MIME邮件的精髓。
+    邮件体被分为多个段，每个段又包含段头和段体两部分，这两部分之间也以空行分隔。
+    常见的multipart类型有三种：multipart/mixed, multipart/related和multipart/alternative。
+
+    如果在邮件中要添加附件，必须定义multipart/mixed段；
+    如果存在内嵌资源，至少要定义multipart/related段；
+    如果纯文本与超文本共存，至少要定义multipart/alternative段。
+    什么是“至少”？举个例子说，如果只有纯文本与超文本正文，那么在邮件头中将类型扩大化，定义为multipart/related，甚至multipart/mixed，都是允许的。
+
+需要补充说明地是，构成邮件体的各段有自己的属性，这些属性由段头的域来说明。下面给出了段头中常见的域。
+域名                            含义            
+Content-Type                    段体的类型                  
+Content-Transfer-Encoding       段体的传输编码方式
+Content-Disposition             段体的安排方式
+Content-ID                      段体的ID
+Content-Location                段体的位置(路径)
+Content-Base                    段体的基位置

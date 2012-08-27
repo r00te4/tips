@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 32
+/svn/!svn/ver/33/Email-Fetch/doc
+END
+doc_smtplib
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/33/Email-Fetch/doc/doc_smtplib
+END
+doc_imaplib
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/33/Email-Fetch/doc/doc_imaplib
+END
+电子邮件原理.pdf
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/33/Email-Fetch/doc/%E7%94%B5%E5%AD%90%E9%82%AE%E4%BB%B6%E5%8E%9F%E7%90%86.pdf
+END
+doc_telnet_smtp_pop_imap
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/33/Email-Fetch/doc/doc_telnet_smtp_pop_imap
+END
+邮件系统原理.pdf
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/33/Email-Fetch/doc/%E9%82%AE%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%8E%9F%E7%90%86.pdf
+END
+doc_poplib
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/33/Email-Fetch/doc/doc_poplib
+END
+doc_MIME
+K 25
+svn:wc:ra_dav:version-url
+V 41
+/svn/!svn/ver/33/Email-Fetch/doc/doc_MIME
+END
+doc_smtp_server
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/33/Email-Fetch/doc/doc_smtp_server
+END

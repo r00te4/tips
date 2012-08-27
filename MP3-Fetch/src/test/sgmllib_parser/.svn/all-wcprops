@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/34/MP3-Fetch/src/test/sgmllib_parser
+END
+test_1.py
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/34/MP3-Fetch/src/test/sgmllib_parser/test_1.py
+END
+test_2.py
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/34/MP3-Fetch/src/test/sgmllib_parser/test_2.py
+END
+test_3.py
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/34/MP3-Fetch/src/test/sgmllib_parser/test_3.py
+END
+test_4.py
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/34/MP3-Fetch/src/test/sgmllib_parser/test_4.py
+END
+test_5.py
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/34/MP3-Fetch/src/test/sgmllib_parser/test_5.py
+END

@@ -1,0 +1,221 @@
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet
+END
+langcyrillicmodel.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/langcyrillicmodel.py
+END
+langhebrewmodel.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/langhebrewmodel.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/__init__.py
+END
+langhungarianmodel.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/langhungarianmodel.py
+END
+big5prober.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/big5prober.py
+END
+universaldetector.py
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/universaldetector.py
+END
+latin1prober.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/latin1prober.py
+END
+jisfreq.py
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/jisfreq.py
+END
+big5freq.py
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/big5freq.py
+END
+gb2312prober.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/gb2312prober.py
+END
+escsm.py
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/escsm.py
+END
+chardistribution.py
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/chardistribution.py
+END
+gb2312freq.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/gb2312freq.py
+END
+langgreekmodel.py
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/langgreekmodel.py
+END
+charsetgroupprober.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/charsetgroupprober.py
+END
+mbcharsetprober.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/mbcharsetprober.py
+END
+escprober.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/escprober.py
+END
+mbcssm.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/mbcssm.py
+END
+hebrewprober.py
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/hebrewprober.py
+END
+sbcharsetprober.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/sbcharsetprober.py
+END
+codingstatemachine.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/codingstatemachine.py
+END
+utf8prober.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/utf8prober.py
+END
+euctwprober.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/euctwprober.py
+END
+charsetprober.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/charsetprober.py
+END
+euctwfreq.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/euctwfreq.py
+END
+jpcntx.py
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/jpcntx.py
+END
+langthaimodel.py
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/langthaimodel.py
+END
+mbcsgroupprober.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/mbcsgroupprober.py
+END
+constants.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/constants.py
+END
+test.py
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/test.py
+END
+eucjpprober.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/eucjpprober.py
+END
+sbcsgroupprober.py
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/sbcsgroupprober.py
+END
+sjisprober.py
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/sjisprober.py
+END
+euckrprober.py
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/euckrprober.py
+END
+langbulgarianmodel.py
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/langbulgarianmodel.py
+END
+euckrfreq.py
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/33/Email-Fetch/doc/python2-chardet-2.0.1/build/lib/chardet/euckrfreq.py
+END

@@ -1,0 +1,390 @@
+#! /usr/bin/python
+
+一. 代理服务器:
+    代理服务器(Proxy server)，从其名字上不难理解，就是做代理的，其作用与现在各种各样的代理商差不多。
+
+    作为教育网和169的用户来讲，他们不能直接访问国外的站点，而且网络速度也惊人的慢，这样很多网络功能就无法使用。最典型的例子就是不能用Icq了，因为Icq的服务器都在国外，直接连不上。因此在这个时候代理服务器就起了至关重要的作用。
+
+    通常我们访问网站都是直接与目的主机相连，使用了代理服务器，可先与代理服务器进行连接，然后把我们的请求(比如说我们想得到哪个网页的内容)告诉代理服务器，由代理服务器帮我们取下来。一般代理服务器都有一个很大的Cache，起缓冲的作用，它不断将新取得数据储存到它的存储器上；如果浏览器所请求的数据在它本机的存储器上已经存在，而且是最新的话，那么它就不重新从Web服务器取数据，而直接将存储器上的数据传送给用户的浏览器，这样就能显著地提高浏览速度和效率了。
+
+    代理服务器通常有两种类型，Http代理和Socks5代理。Http代理是用来浏览网页用的，其端口一般是80和8080，不过也有3128等其它端口的；而socks5代理则可以看成是一种全能的代理，不管是telnet、ftp 还是irc聊天都可以用它，这类代理的端口通常是1080。
+
+----------------------
+
+二. 正向代理与反向代理:
+1.正向代理的概念
+       正向代理 是一个位于客户端和原始服务器(origin server)之间的服务器，为了从原始服务器取得内容，客户端向代理发送一个请求并指定目标(原始服务器)，然后代理向原始服务器转交请求并将获得的内容返回给客户端。客户端必须要进行一些特别的设置才能使用正向代理。
+
+2.反向代理的概念
+      反向代理正好相反，对于客户端而言它就像是原始服务器，并且客户端不需要进行任何特别的设置。客户端向反向代理的命名空间(name-space)中的内容发送普通请求，接着反向代理将判断向何处(原始服务器)转交请求，并将获得的内容返回给客户端，就像这些内容原本就是它自己的一样。
+
+3. 两者区别
+   从用途上来讲：
+   正向代理的典型用途是为在防火墙内的局域网客户端提供访问Internet的途径。正向代理还可以使用缓冲特性减少网络使用率。反向代理的典型用途是将防火墙后面的服务器提供给Internet用户访问。反向代理还可以为后端的多台服务器提供负载平衡，或为后端较慢的服务器提供缓冲服务。
+   另外，反向代理还可以启用高级URL策略和管理技术，从而使处于不同web服务器系统的web页面同时存在于同一个URL空间下。
+
+   从安全性来讲：
+   正向代理允许客户端通过它访问任意网站并且隐藏客户端自身，因此你必须采取安全措施以确保仅为经过授权的客户端提供服务。
+   反向代理对外都是透明的，访问者并不知道自己访问的是一个代理。
+
+--------------------------
+
+三. GET与POST区别
+1、POST是被设计用来向web服务器上放东西的，而GET是被设计用来从服务器取东西的，GET也能够向服务器传送较少的数据，而Get之所以也能传送数据,只是用来设计告诉服务器,你到底需要什么样的数据.POST的信息作为HTTP 请求的内容，而GET是在HTTP 头部传输的；
+2、POST与GET在HTTP 中传送的方式不同，GET的参数是在HTTP 的头部传送的，而Post的数据则是在HTTP 请求的内容里传送;
+3、POST传输数据时，不需要在URL中显示出来，而GET方法要在URL中显示；
+4、GET方法由于受到URL长度的限制,只能传递大约1024字节；POST传输的数据量大，可以达到2M
+
+---------------
+
+四. Cookies技术
+Cookies现在经常被大家提到，那么到底什么是Cookies，它有什么作用 呢？
+Cookies是一种能够让网站服务器把少量数据储存到客户端的硬盘或内存，或是从客户端的硬盘读取数据的一种技术。Cookies是当你浏览某网站 时，由Web服务器置于你硬盘上的一个非常小的文本文件，它可以记录你的用户ID、密码、浏览过的网页、停留的时间等信息。
+
+当你再次来到该网站时，网站通过读取Cookies，得知你的相关信息，就可以做出相应的动作，如在页面显示欢迎你的标语，或者让你不用输入ID、密码就直接登录等等。
+从本质上讲，它可以看作是你的身份证。但Cookies不能作为代码执行，也不会传送病毒，且为你所专有，并只能由提供它的服务器来读取。
+保存的信息片断以“名/值”对(name-value pairs)的形式储存，一个“名/值”对仅仅是一条命名的数据。
+一个网站只能取得它放在你的电脑中的信息，它无法从其它的Cookies文件中取得信息，也无法得到你的电脑上的其它任何东西。
+Cookies中的内容大多数经过了加密处理，因此一般用户看来只是一些毫无意义的字母数字组合，只有服务器的CGI处理程序才知道它们真正的含义。
+
+------------------
+
+五. urllib2
+HTTP的访问过程就是一来一回的. python提供的urllib2很方便发起访问请求:
+ * urllib2.urlopen(url)         url为完整的URL
+ * urllib2.urlopen(request)     request为urllib2.Request类实例
+
+1. 请求的header段处理
+    request = urllib2.Request(url, headers)     # headers就是字典实例
+    retval = urllib2.urlopen(request)           # 请求将被发出去
+
+2. post的数据处理
+   方法1: 
+    retval = urllib2.urlopen(url=' http://www.google.com' , data=' person=jessinio&gender=male' ) #这样一个post请求就被发出去了.
+   方法2:
+    request = urllib2.Request(url, data=' person=jessinio&gender=male' )    #指定request实例拥有的data字符串
+    retval = urllib2.urlopen(request)                                       # 请求将被发出去
+
+常常在平时出现这样的问题: 请求一个html文件, 但返回的不是文本数据. 比如gzip. 那就需要处理一次
+
+-----------------------
+
+五. urllib2的使用
+python发送GET/POST可能涉及的lib:  urllib, urllib2, cookielib ;
+1.最基本的抓站
+import urllib2
+content = urllib2.urlopen(' http://XXXX' ).read()
+
+2. 代理处理
+import urllib2
+proxy_support = urllib2.ProxyHandler({' http' :' http://XX.XX.XX.XX:XXXX' })
+opener = urllib2.build_opener(proxy_support, urllib2.HTTPHandler)
+urllib2.install_opener(opener)
+content = urllib2.urlopen(' http://XXXX' ).read()
+
+3. cookie的处理
+import urllib2, cookielib
+#cj = cookielib.CookieJar() 
+cj = cookielib.LWPCookieJar() 
+cookie_support = urllib2.HTTPCookieProcessor(cj)
+opener = urllib2.build_opener(cookie_support, urllib2.HTTPHandler)
+urllib2.install_opener(opener)
+content = urllib2.urlopen(' http://XXXX' ).read()
+cj.save("cookie.file")
+
+如果想同时用代理和cookie，那就加入proxy_support然后opener改为
+opener = urllib2.build_opener(proxy_support, cookie_support, urllib2.HTTPHandler)
+
+4. GET请求数据: 使用GET在百度搜索引擎上查询, 在百度的搜索条中随便输入一些内容,演示如何生成GET串,并进行请求. 
+import urllib, urllib2
+#http://www.baidu.com/s?wd=python&rsv_bp=0&inputT=1540
+url = "http://www.baidu.com/s"
+search = [('wd', 'python' ),('rsv_bp', '0' ),('inputT', '1540' )]
+url_String = url + "?" + urllib.urlencode(search)
+
+req = urllib2.Request(url_String)
+fd = urllib2.urlopen(req)
+print fd.read()
+
+#把查询的关键字与及各种参数, 使用urllib.urlencode()进行组合, 最终作为一个完整的URL传递给urllib2.Request
+#GET只是一个请求过程, 向web服务器发送需要请求的参数, 服务器返回结果
+
+5. POST提交form数据:
+1.编码还是使用urlencode
+2.不必要使用字符串连接
+3.而使用urlopen的data参数
+
+HTML表单(Form)是HTML的一个重要部分，主要用于采集和提交用户输入的信息, 如世纪佳缘的登录表单, 登录网址是:http://login.jiayuan.com/
+<form name="login" id="login" method="post" action="/dologin.php?pre_url=http://www.jiayuan.com/usercp" target="login_run">
+<input name="name" id="login_email" type="text">
+<input name="password" id="login_password" type="password">
+<input type="submit" value="提交">
+</form>
+
+1. form 的method是 post
+2. form 的action是 /dologin.php?pre_url=http://www.jiayuan.com/usercp
+3. form 的选项有: name, password
+
+知道了上面的数据以后, 就可以提交这个form数据了:
+import urllib, urllib2, cookielib
+url = 'http://login.jiayuan.com/'
+action = 'dologin.php?pre_url=http://www.jiayuan.com/usercp'
+login_url = url + action
+
+login_Data = {"name":"xxx@163.com", "password":"xxx"}
+post_Data = urllib.urlencode(login_Data)
+
+cj = cookielib.LWPCookieJar()
+opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+urllib2.install_opener(opener)
+
+req = urllib2.Request(login_url, post_Data)
+urllib2.urlopen(req).read() 或者 urllib2.urlopen("http://www.jiayuan.com/usercp").read()
+cj.save('cookie.bak')
+
+-------------------------
+
+1. urllib2 显然是比 urllib 高级一点的模块，里面包括了如何使用 Cookies
+2. 在 urllib2 中，每个客户端可以用一个 opener 来抽象，每个 opener 又可以增加多个 handler 来增强其功能。 
+3. 在构造 opener 时指定了 HTTPCookieProcessor 做为 handler，因此这个 handler 支持 Cookie
+4. 使用 install_opener 后，调用 urlopen 时会使用这个 opener
+5. 如果不需要保存 Cookie，cj 这个参数可以省略, 即不需要使用cj.save("cookie.bak")来保存
+6. login_Data 存放的就是登录所需要的信息，需要使用urllib.urlencode()编码, 在登录的时候把这个信息传递过去就行了
+
+    
+6. 伪装成浏览器访问
+某些网站反感爬虫的到访，于是对爬虫一律拒绝请求 这时候我们需要伪装成浏览器，这可以通过修改http包中的header来实现: 
+postdata=urllib.urlencode({ 'username':' XXXXX', 
+    'password':' XXXXX', 
+    'continueURI' :' http://www.verycd.com/', 
+    'login_submit' :'登录'})
+ 
+headers = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'}
+req = urllib2.Request(url = 'http://secure.verycd.com/signin/*/http://www.verycd.com/', data = postdata, headers = headers)
+
+
+7. 盗链
+为什么会产生盗链?
+一般浏览有一个重要的现象就是一个完整的页面并不是一次全部传送到客户端的。
+如果请求的是一个带有许多图片和其它信息的页面，那么最先的一个Http 请求被传送回来的是这个页面的文本，然后通过客户端的浏览器对这段文本的解释执行，发现其中还有图片，那么客户端的浏览器会再发送一条Http请求，当这个请求被处理后那么这个图片文件会被传送到客户端，然后浏览器回将图片安放到页面的正确位置，就这样一个完整的页面也许要经过发送多条Http请求才能够被完整的显示。
+基于这样的机制，就会产生一个问题，那就是盗链问题：就是一个网站中如果没有起页面中所说的信息，例如图片信息，那么它完全可以将这个图片的连接到别的网站。这样没有任何资源的网站利用了别的网站的资源来展示给浏览者，提高了自己的访问量，而大部分浏览者又不会很容易地发现，这样显然，对于那个被利用了资源的网站是不公平的。一些不良网站为了不增加成本而扩充自己站点内容，经常盗用其他网站的链接。一方面损害了原网站的合法利益，另一方面又加重了服务器的负担。
+网站遇到最多的是两类盗链，一是图片盗链，二是文件盗链
+
+反盗链的解决方案
+其实通过WEB服务器的URL过滤技术，这个伤脑筋的问题会很容易得到解决。
+如果WEB服务器用的是APACHE的话，那么使用APACHE自带的Url Rewrite功能可以很轻松地防止各种盗链，其原理是检查REFER，如果REFER的信息来自其他网站则禁止访问所需要的资源
+
+反反盗链
+如上,某些站点有所谓的反盗链设置，其实说穿了很简单，就是检查你发送请求的header里面，referer站点是不是他自己，所以我们只需要像浏览器伪装一样，把headers的referer改成该网站即可，以黑幕著称地cnbeta为例：
+headers = {'Referer':'http://www.cnbeta.com/articles'}
+headers 是一个dict数据结构，你可以放入任何想要的header，来做一些伪装。例如，有些自作聪明的网站总喜欢窥人隐私，别人通过代理访问，他偏偏要读取header中的X-Forwarded-For来看看人家的真实IP，没话说，那就直接把X-Forwarde-For改了吧，可以改成随便什么好玩的东东来欺负欺负他..
+
+
+8. 编码
+要解决所有编码问题，要明白几个事：
+1.python内部用的是unicode.
+2.不管你当前是神马编码，都先使用decode转换成unicode
+3.再转为另外的可读编码,一般我们是用系统当前编码为准
+
+decode的作用是将其他编码的字符串转换成unicode编码，如str1.decode('gb2312')，表示将gb2312编码的字符串str1转换成unicode编码
+encode的作用是将unicode编码转换成其他编码的字符串，如str2.encode('gb2312')，表示将unicode编码的字符串str2转换成gb2312编码
+因此，转码的时候一定要先搞明白，字符串str是什么编码，然后decode成unicode，然后再encode成其他编码
+
+在用Python抓取网页时，由于不同网站所采用的编码不同，使用decode时先知道该网页所采用的编码，也可以用python来获得:
+req=urllib2.Request("http://www.baidu.com/")
+fd=urllib2.urlopen(req)
+html = fd.read()
+
+print fd.headers['Content-Type' ]               #取得网页所采用的编码, 百度的是gbk，其他的一般网站比如google就是utf8的
+syscode = sys.getfilesystemencoding()           #取得当前系统编码
+print  html.decode('gbk').encode(syscode)       #第一遍把utf-8decode 成unicode编码，再encode到系统编码 显示出来，如果有特殊需要，可以输出想要的编码
+
+
+
+s.decode('gbk', 'ignore').encode('utf-8')
+因为decode的函数原型是decode([encoding], [errors=' strict' ])，可以用第二个参数控制错误处理的策略，默认的参数就是strict，代表遇到非法字符时抛出异常；
+如果设置为ignore，则会忽略非法字符；
+如果设置为replace，则会用?取代非法字符；
+如果设置为xmlcharrefreplace，则使用XML的字符引用。
+
+
+----------------------------
+
+六. pycurl使用
+Pycurl包是一个libcurl的Python接口，它是由C语言编写的。与urllib相比，它的速度要快很多
+Libcurl 是一个支持FTP, FTPS, HTTP, HTTPS, GOPHER, TELNET, DICT, FILE 和 LDAP的客户端URL传输库.libcurl也支持HTTPS认证,HTTP POST,HTTP PUT,FTP上传,代理,Cookies,基本身份验证,FTP文件断点继传,HTTP代理通道等等。
+
+1. 写数据到文件
+fp = open("tmp.txt", "wb")
+curl = pycurl.Curl()
+curl.setopt(pycurl.URL, url)
+curl.setopt(pycurl.FOLLOWLOCATION, 1)
+curl.setopt(pycurl.MAXREDIRS, 5)        #最大重定向数
+curl.setopt(pycurl.CONNECTTIMEOUT, 30)  #设置超时
+curl.setopt(pycurl.TIMEOUT, 300)
+curl.setopt(pycurl.HEADER, 1)           #数据是否包含头信息
+curl.setopt(pycurl.NOSIGNAL, 1)         #解决多线程时, pycurl会崩溃
+curl.setopt(pycurl.WRITEDATA, fb)       #使用pycurl.WRITEDATA
+
+curl.perform()
+http_code = curl.getinfo(curl.HTTP_CODE)
+
+2. 写数据到StringIO
+text = StringIO.StringIO()
+curl = pycurl.Curl()
+curl.setopt(pycurl.URL, url)
+curl.setopt(pycurl.FOLLOWLOCATION, 1)
+curl.setopt(pycurl.MAXREDIRS, 5)
+curl.setopt(pycurl.CONNECTTIMEOUT, 30)
+curl.setopt(pycurl.TIMEOUT, 300)
+curl.setopt(pycurl.HEADER, 1)
+curl.setopt(pycurl.WRITEFUNCTION, text.write)   #使用pycurl.WRITEFUNCTION
+
+curl.perform()
+html=text.getvalue()
+
+3. pycurl 的一些响应信息：
+ pycurl.NAMELOOKUP_TIME     域名解析时间
+ pycurl.CONNECT_TIME        远程服务器连接时间
+ pycurl.PRETRANSFER_TIME    连接上后到开始传输时的时间
+ pycurl.STARTTRANSFER_TIME  接收到第一个字节的时间
+ pycurl.TOTAL_TIME          上一请求总的时间
+ pycurl.REDIRECT_TIME       如果存在转向的话，花费的时间
+
+ pycurl.EFFECTIVE_URL
+ pycurl.HTTP_CODE HTTP      响应代码
+ pycurl.REDIRECT_COUNT      重定向的次数
+ pycurl.SIZE_UPLOAD         上传的数据大小
+ pycurl.SIZE_DOWNLOAD       下载的数据大小
+ pycurl.SPEED_UPLOAD        上传速度
+ pycurl.HEADER_SIZE         头部大小
+ pycurl.REQUEST_SIZE        请求大小
+ pycurl.CONTENT_LENGTH_DOWNLOAD     下载内容长度
+ pycurl.CONTENT_LENGTH_UPLOAD       上传内容长度
+ pycurl.CONTENT_TYPE                内容的类型
+ pycurl.RESPONSE_CODE               响应代码
+ pycurl.SPEED_DOWNLOAD              下载速度
+ pycurl.SSL_VERIFYRESULT
+ pycurl.INFO_FILETIME               文件的时间信息
+
+ pycurl.HTTP_CONNECTCODE HTTP       连接代码
+ pycurl.HTTPAUTH_AVAIL
+ pycurl.PROXYAUTH_AVAIL
+ pycurl.OS_ERRNO
+ pycurl.NUM_CONNECTS
+ pycurl.SSL_ENGINES
+ pycurl.INFO_COOKIELIST
+ pycurl.LASTSOCKET
+ pycurl.FTP_ENTRY_PATH 
+
+----------------------------
+
+七. 解析网页
+从网页上自动获取大量信息，是非常必要的。比如可以让一个脚本监视许多页面数据的更新，同时据此进行数据分析，形成分析报告。
+抓取了网页之后，对HTML的解释是个大问题，一般我们会用这几种：
+1. SGMLParser
+2. HTMLParser
+3. BeautifulSoup
+4. lxml
+
+当然，还有其它的，但最常用的是前三种, 前两种，经过对比，觉得SGMLParser更好，一来，在Dive into Python这本入门文档里面以它为例子，二来，HTMLParser有不少BUG，比如对中文支持不好、对HTML格式要求严格等。我就是因为第二个原因，在使用中它不断抛出异常，终于受不了了才使用的SGMLParser, 例如: 分析一个网页中特定的表格, 并提取相应的内容:
+data = '''
+<table class="table-list" cellpadding="0" cellspacing="0" border="0">
+   <tr class="own">
+       <td class="first"> <a href="http://www.baidu.com" target="_blank"><em>百度</em></a> </td>
+       <td class="second"><a href="http://news.baidu.com" target="_blank"><em>新闻</em></a></td>
+    </tr>
+   <tr class="own stripe">
+       <td class="first"> <a href="http://www.sina.com" target="_blank"><em>新浪</em></a> </td>
+       <td class="second"><a href="http://news.sina.com" target="_blank"><em>新闻</em></a></td>
+    </tr>
+</table
+'''
+#1. 需要定位到class="table-list" 的这个table
+#2. 需要提取这个table的文本数据,以及对应的href 
+from sgmllib import SGMLParser
+
+class table_parser(SGMLParser):
+    is_table_list = 0
+    is_td_second = 0
+
+    def reset(self):
+        SGMLParser.reset(self)
+
+    def start_table(self, attrs):
+        for id, value in attrs:
+            if id == "class" and value == "table-list":
+                self.is_table_list = 1
+    def end_table(self):
+        self.is_table_list = 0
+
+    def start_td(self, attrs):
+        for id, value in attrs:
+            if id == "class" and value == "second":
+                self.is_td_second = 1
+    def end_td(self):
+        self.is_td_second = 0
+
+    def handle_data(self, text):
+        if self.is_table_list == 1 and self.is_td_second == 1:
+            print text
+
+    def start_a(self, attrs):
+        if self.is_td_second == 1:
+            for id, value in attrs:
+                if id == "href":
+                    print value
+
+t_parser = table_parser()
+t_parser.feed(data)
+
+1. 如果提取数据较为复杂, 可自己编写正则表达式来提取数据, 常用的方法是使用前向匹配(?<=)和后向匹配(?=)来匹配区间数据
+2. HTMLParser如果碰到含有中文字符的网页, 直接报错, 不能正常解析
+3. attrs是一个元组列表list(属性，值), 如: 
+<input type="hidden" name="NXX" id="IDXX" value="VXX" />, 那么它的attrs列表为 [('type', 'hidden'), ('name', 'NXX'), ('id', 'IDXX'), ('value', 'VXX')] 
+4. reset 由 SGMLParser 的 __init__ 方法来调用，也可以在创建一个分析器实例时手工来调用。所以如果您需要做初始化，在 reset 中去做，而不要在 __init__ 中做。这样当某人重用一个分析器实例时，可以正确地重新初始化
+5. 只要找到一个 <a> 标记，start_a 就会由 SGMLParser 进行调用。这个标记可以包含一个 href 属性，或者包含其它的属性，如name或title
+
+
+
+通过Python所带的urlparse模块，我们能够轻松地把URL分解成元件，之后，还能将这些元件重新组装成一个URL
+URL包括 <scheme>://<netloc>/<path>;<params>?<query>#<fragment>6方面信息
+urllib2更流行一些。对于简单的下载任务，urllib比较好。如果你需要HTTP验证或cookies，或你想写一些扩展去处理你自己的协议的话，那么urllib2是正确的选择。
+
+
+>>> data = '丽江'
+>>> print data
+丽江
+>>> data
+'\xe4\xb8\xbd\xe6\xb1\x9f'
+>>> urllib.quote (data)
+'%E4%B8%BD%E6%B1%9F'
+那我们想转回去呢？
+>>> urllib.unquote('%E4%B8%BD%E6%B1%9F')
+'\xe4\xb8\xbd\xe6\xb1\x9f'
+>>> print urllib.unquote ('%E4%B8%BD%E6%B1%9F')
+丽江
+
+
+细心的同学会发现贴吧url中出现的是%C0%F6%BD%AD，而非'%E4%B8%BD%E6%B1%9F'，其实是编码问题。百度的是gbk，其他的一般网站比如google就是utf8的。所以可以用下列语句实现。
+>>> import sys,urllib
+>>> s = '丽江'
+>>> urllib.quote(s.decode(sys.stdin.encoding).encode('gbk'))
+'%C0%F6%BD%AD'
+>>> urllib.quote(s.decode(sys.stdin.encoding).encode('utf8'))
+'%E4%B8%BD%E6%B1%9F'
+
+用python下载有两种方法，使用urllib，urllib2两个类
+1.使用urllib的urlretrieve方法：
+import urllib
+filename="http://122.72.25.73/icache/bai-show.com/fileupload/music/634107480100781250.mp3"
+urllib.urlretrieve(filename,r"urllib.mp3")
+
+2.使用urllib2
+import urllib2
+url="http://122.72.25.73/icache/bai-show.com/fileupload/music/634107480100781250.mp3"
+res=urllib2.urlopen(url)
+data=res.read()
+open(r"urllib2.mp3","wb").write(data)
+
+

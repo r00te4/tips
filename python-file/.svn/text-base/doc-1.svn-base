@@ -1,0 +1,234 @@
+1.os模块
+os模块包装了不同操作系统的通用接口，使用户在不同操作系统下，可以使用相同的函数接口，返回相同结构的结果。
+os.name:返回当前操作系统名称（'posix', 'nt', 'os2', 'mac', 'ce' or 'riscos'）
+
+os中定义了一组文件、路径在不同操作系统中的表现形式参数，如
+os.sep（文件夹分隔符，windows中是 \ ）
+os.extsep（扩展名分隔符，windows中是 . ）
+os.pathsep（目录分隔符，windows中是 ; ）
+os.linesep（换行分隔符，windows中是 \r\n ）
+
+os中有大量文件、路径操作的相关函数，如：
+listdir(path):列举目录下的所有文件
+makedir(path):创建文件夹，注：创建已存在的文件夹将异常
+makedirs(path):递归式的创建文件夹，注：创建已存在的文件夹将异常
+remove(filename):删除一个文件
+rmdir(path):删除一个文件夹，注：删除非空的文件夹将异常
+removedirs(path):递归的删除文件夹，直到有一级的文件夹非空，注：文件夹路径不能以'\'结束
+rename(src,dst):给文件或文件夹改名（可以改路径，但是不能覆盖目标文件）
+renames(src,dst):递归式的给文件或文件名改名
+walk(path):列举path下的所有文件、文件夹
+
+os中与进程相关的操作，如：
+execl(path):运行一个程序来替代当前进程，会阻塞式运行
+_exit(n):退出程序
+startfile(filename):用与文件关联的程序运行，关联程序打开后，立即返回
+system(cmd):运行一个程序或命令，会立即返回，并在cmd执行完成后，会返回cmd退出代码
+
+os.path:在不同的操作系统中调用不同的模块，是一个可import的模块，这个模块中提供很多有用的操作：
+abspath(path):返回path的绝对路径，若path已经是绝对路径了，则保持。
+basename(path):返回path中的文件名。
+commonprefix(list):返回list中的统一前缀，用于获得一组字符串的左起相同的内容
+dirname(path):返回path中的文件夹部分，结果不包含'\'
+exists(path):文件或文件夹是否存在
+getatime(path):文件或文件夹的最后访问时间，从新纪元到访问时的秒数
+getmtime(path):文件或文件夹的最后修改时间
+getctime(path):文件或文件夹的创建时间
+getsize(path):文件或文件夹的大小，若是文件夹返回0
+isabs(path):返回是否是绝对路径
+isfile(path):返回是否是文件路径
+isdir(path):返回是否是文件夹路径
+islink(path):返回是否是快捷方式
+join(path1,path2,...):将path进行组合，若其中有绝对路径，则之前的path将被删除
+normcase(path):转换路径中的间隔符
+normpath(path):转换路径为系统可识别的路径
+realpath(path):转换路径为绝对路径
+split(path):将路径分解为(文件夹,文件名)
+splitext(path):将路径分解为(其余部分,.扩展名)，若文件名中没有扩展名，扩展名部分为空字符串
+在操作与系统不支持的对象时，抛出OSError异常。
+
+2.sys模块
+系统信息和方法模块，提供了很多实用的变量和方法：
+argv:命令行参数List，第一个元素是程序本身路径
+builtin_module_names:Python解释器导入的模块列表
+modules.keys():返回所有已经导入的模块列表
+exc_info():获取当前正在处理的异常类
+exc_type、exc_value、exc_traceback:当前处理的异常详细信息
+executable:Python解释程序路径
+exit(n):退出程序，正常退出时exit(0)
+getwindowsversion():获取Windows的版本
+hexversion:获取Python解释程序的版本值，16进制格式如：0x020403F0
+version:获取Python解释程序的版本信息
+maxint:最大的Int值
+maxunicode:最大的Unicode值
+modules:返回系统导入的模块字段，key是模块名，value是模块
+path:返回模块的搜索路径，初始化时使用PYTHONPATH环境变量的值
+platform:返回操作系统平台名称
+
+3.built-in内置模块
+eval(expr[,globals[,locals]]):执行一段代码，并返回结果
+exec(expr[,globals[,locals]]):执行一段代码
+execfile(file[,globals[,locals]]):执行一个文件
+filter(func,list):使用函数来过滤list，返回满足要求的list元素组
+getattr(obj,name[,default]):获取对象的属性，若没有该属性，则返回默认值
+setattr(obj,name,value):设置对象的属性，若没有该属性，则异常
+hasattr(obj,name):返回对象是否有指定属性
+input([prompt]):提示控制台输入，必须输入常量或变量，若想直接输入字符串，需要使用引号括起来
+raw_input([prompt]):提示控制台输入，直接输入数字或字符串
+open(filename,mode):打开文件，mode可以为：w,r,a，若想同时读写，则加上+，若想以二进制读写，则加上b
+reload(module):再次导入已导入过的模块
+type(obj):返回一个对象的类型
+zip(seq1,...):将若干个元组进行合并，长度以元组中的最短的为准
+
+4.time模块
+这个模块定义的都是和时间、时钟、计时相关的内容：
+clock():返回第一次调用到当前调用时的计时，是以秒为单位的浮点数
+localtime([t]):返回时间的数组，有9个元素(年,月,日,时,分,秒,星期几,当年的第几天,是否夏令时)，星期一为0
+mktime(tlist):是localtime的反函数，将一个9元数组转成一个浮点时间值，后3个元素，系统会自己调整
+sleep(n):挂起线程n秒
+strftime(fstring[,t]):格式化显示时间，fstring常用关键字：
+%a,%A:星期的缩写，全拼
+%b,%B:月份的缩写，全屏
+%c,%x,%X:本地默认表示法（日期时间，日期，时间）
+%Y(%y:2位),%m,%d,%H,%M,%S:年月日时分秒
+%w:星期，0为星期天
+strptime(string[,format]):将字符串解析为9元素的时间数组
+time():返回当前时间值，浮点数
+更高级的用法可以使用datetime模块，创建其中的date,time对象，可以进行加减操作，得出timedelta对象。
+
+5.re模块
+限定符说明：
+".": 匹配任何字符
+"^": 匹配开头
+"$": 匹配结尾
+"*": 匹配0次或更多次之前的表达式。贪婪时，匹配尽可能多次
+"+": 匹配1次或更多次之前的表达式。等价于{1,}
+"?": 匹配0次或1次之前的表达式。等价于{0,1}
+"*?,+?,??": 非贪婪匹配
+"{m,n}": 贪婪式匹配之前的表达式m到n次
+"{m,n}?": 非贪婪匹配之前的表达式m到n次
+"\": 将下一个字符转义
+[ABC]: 指定一个字符集
+[^ABC]: 指定一个不在范围内的字符集
+"A|B": 匹配条件A或条件B
+(pattern): 匹配括号内的表达式，并作为匹配项
+(?:pattern): 匹配括号内的表达式，但不作为匹配项
+(?#...): 注释，忽略
+(?=pattern): 预查，若之后的内容匹配表达式，则成立
+(?!pattern): 预查，若之后的内容不匹配表达式，则成立
+(?P<name"pattern): 给一个匹配项命名
+(?P=name)： 匹配与之前命名的匹配项内容相同的部分
+如：s='12a34a56'
+re.findall('12(?P<xxx".).*(?P=xxx)56)', s)
+(?P<xxx".)匹配到a，则(?P=xxx)的内容也必须为a时才pp
+(?iLmsux): 设置I,L,M,S,U,or X标记
+转义符说明:
+\A: 匹配开头
+\Z: 匹配结尾
+\b: 匹配开头或结尾的空字符串，通常是指单词边界 ？？？
+\B: 匹配非开头和结尾的空字符串，通常是指非单词边界？？？
+\d: 匹配一个数字。等价于[0-9]
+\D: 匹配一个非数字。等价于[^0-9]
+\s: 匹配一个空白字符。等价于[ \t\n\r\f\v]
+\S: 匹配一个非空白字符。等价于[^ \t\n\r\f\v]
+\w: 匹配一个字母数字字符。等价于[a-zA-Z0-9_]
+\W: 匹配一个非字母数字字符。等价于[^a-zA-Z0-9_]
+\\: 匹配一个反斜杠
+\f: 匹配一个换页符。等价于\x0C 和 \cL
+\n: 匹配一个换行符。等价于\x0A 和 \cJ
+\r: 匹配一个回车符。等价于\x0D 和 \cM
+\t: 匹配一个制表符。等价于\x09 和 \cI
+\v: 匹配一个垂直制表符。等价于\x0B 和 \cK
+\xHH: 匹配 HH，其中 HH 为十六进制转义值
+\uHHHH: 匹配 HHHH，其中 HHHH 是一个用四个十六进制数字表示的Unicode字符
+常用匹配：
+匹配中文字符的正则表达式： [\u4e00-\u9fa5]
+匹配双字节字符(包括汉字在内)：[^\x00-\xff]
+匹配空行的正则表达式：\n[\s| ]*\r
+匹配首尾空格的正则表达式：(^\s*)|(\s*$)
+匹配Email地址的正则表达式：\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*
+匹配网址URL的正则表达式：^[a-zA-z]+://(\\w+(-\\w+)*)(\\.(\\w+(-\\w+)*))*\\? \\S*)?$
+匹配帐号是否合法(字母开头，允许5-16字节，允许字母数字下划线)：^[a-zA-Z][a-zA-Z0-9_]{4,15}$
+匹配国内电话号码：(\d{3}-|\d{4}-)?(\d{8}|\d{7})?
+匹配腾讯QQ号：^[1-9]*[1-9][0-9]*$
+模块使用：
+match:
+search:
+sub: 替换
+subn: 替换并返回替换的次数
+split: 分隔
+findall: 查找所有匹配项
+compile:
+purge:
+escape:
+可选参数：
+I(IGNORECASE): 忽略大小写
+L(LOCALE): 使用\w,\W,\b,\B时依据本地配置？？？
+M(MULTILINE): 多行，"^"匹配每行的开头，"$"匹配每行的末尾
+S(DOTALL): 使"."匹配包含换行符在内的任意字符
+X(VERBOSE): 忽略空白处和注释内容
+U(UNICODE): 使\w,\W,\b,\B依靠UNICODE编码
+
+6.thread模块
+
+7.urllib模块
+
+8.urllib2模块
+
+9.socket模块
+
+10.file对象操作
+open(文件名,模式,缓冲):模式可以置为(r,w,a,r+,w+等)，这些模式本身不会去锁定文件，在同时使用读和写时，要使用seek来移动位 置。
+close():关闭的作用是置位closed，多次关闭不会引发异常。
+flush():将内在缓冲的内容写入文件。
+read(n):读入若干字节，无n时，读入全部。
+readline(n):读入若干行，n表示读入的最长字节数。
+seek(offset,where):where=0从起始位置移动，1从当前位置移动，2从结束位置移动。
+tell():文件的当前位置。
+truncate(n):截断文件为n个字符，无n表示从当前位置起截断。
+write(str):在当前位置写入字符串。
+writelines(lines):相当于给lines中的每个字符串调用write函数。
+
+11.其它模块
+filecmp.cmp(file1,file2):比较file1和file2的内容是否相同
+dircmp:可以构造一个比较两个目录内容的对象，较强
+getpass.getpass(prompt):让用户在控制台输入不显示的密码
+getopt.getopt(args,options[,long_options]):用于解析运行参数
+shutil.copy(file1,file2):将文件1复制到file2>)>))>)
+
+
+
+ 1.常用内置函数：(不用import就可以直接使用) 
+    help(obj) 在线帮助, obj可是任何类型
+    callable(obj) 查看一个obj是不是可以像函数一样调用
+    repr(obj) 得到obj的表示字符串，可以利用这个字符串eval重建该对象的一个拷贝
+    eval_r(str) 表示合法的python表达式，返回这个表达式
+    dir(obj) 查看obj的name space中可见的name
+    hasattr(obj,name) 查看一个obj的name space中是否有name
+    getattr(obj,name) 得到一个obj的name space中的一个name
+    setattr(obj,name,value) 为一个obj的name space中的一个name指向vale这个object
+    delattr(obj,name) 从obj的name space中删除一个name
+    vars(obj) 返回一个object的name space。用dictionary表示
+    locals() 返回一个局部name space,用dictionary表示
+    globals() 返回一个全局name space,用dictionary表示
+    type(obj) 查看一个obj的类型
+    isinstance(obj,cls) 查看obj是不是cls的instance
+    issubclass(subcls,supcls) 查看subcls是不是supcls的子类
+   
+  类型转换函数
+    chr(i) 把一个ASCII数值,变成字符
+    ord(i) 把一个字符或者unicode字符,变成ASCII数值
+    oct(x) 把整数x变成八进制表示的字符串
+    hex(x) 把整数x变成十六进制表示的字符串
+    str(obj) 得到obj的字符串描述
+    list(seq) 把一个sequence转换成一个list
+    tuple(seq) 把一个sequence转换成一个tuple
+    dict(),dict(list) 转换成一个dictionary
+    int(x) 转换成一个integer
+    long(x) 转换成一个long interger
+    float(x) 转换成一个浮点数
+    complex(x) 转换成复数
+    max(...) 求最大值
+    min(...) 求最小值
+  用于执行程序的内置函数
+    complie 如果一段代码经常要使用,那么先编译,再运行会更快。 
